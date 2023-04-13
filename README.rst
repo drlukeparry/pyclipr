@@ -1,5 +1,5 @@
-Pyclipr - Python Polygon and Offsetting Library (Python Bindings for Clipper2 Library)
-========================================================================================
+Pyclipr - Python Polygon and Offsetting Library (Clipper2 Bindings)
+========================================================================
 
 .. image:: https://github.com/drlukeparry/pyclipr/actions/workflows/pythonpublish.yml/badge.svg
     :target: https://github.com/drlukeparry/pyclipr/actions
@@ -9,15 +9,17 @@ Pyclipr - Python Polygon and Offsetting Library (Python Bindings for Clipper2 Li
  :target: https://pepy.tech/project/pyclipr
 
 
-Pyclipr is a Python library offering the functionality of the Clipper2 polygon clipping and offsetting library based
-on the `pybind <https://pybind11.readthedocs.io/en/stable/basics.html>`_ library. The package aims to provide access to the Clipper2 library for Python users. 
+Pyclipr is a Python library offering the functionality of the `Clipper2 <http://www.angusj.com/clipper2/Docs/Overview.htm>`_
+polygon clipping and offsetting library based on the `pybind <https://pybind11.readthedocs.io/en/stable/basics.html>`_ .
+This package aims to provide convenient access to the Clipper2 library for Python users, especially with its usage in 3D
+Printing and Computer Graphics applications.
 
 For further information, see the latest `release notes <https://github.com/drlukeparry/pycork/blob/master/CHANGELOG.md>`_.
 
 Installation
 *************
 
-Installation is currently supported on Windows. No special requiremnets are necessary for using pycork, except having the numpy library available. It is recommend to also install the `trimesh <https://github.com/mikedh/trimesh>`_ library to provide an interface to processing meshes as input for pycork.
+Installation is currently supported on Windows. No special requirements are necessary.
 
 .. code:: bash
 
@@ -42,13 +44,15 @@ Alternatively, pyclipr may be compiled directly from source. Currently the prere
 Usage
 ******
 
-The PyClipr library follows similar structure to that documented in `Clipper2 <http://www.angusj.com/clipper2/Docs/Overview.htm>`_ library. 
+The pyclipr library follows similar structure to that documented in `Clipper2 <http://www.angusj.com/clipper2/Docs/Overview.htm>`_ library.
 
 .. code:: python
 
     import numpy as np
 
-    import pycork
+    import pyclipr
+
+
 
 
 
