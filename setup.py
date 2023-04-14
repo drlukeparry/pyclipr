@@ -82,7 +82,7 @@ setup(
     url='https://github.com/drlukeparry/pyclipr',
     long_description=readme,
     long_description_content_type = 'text/x-rst',
-    description='Python wrapper for the C++ translation of the Angus Johnson\'s Clipper2 library (ver. 2.0)',
+    description='Python library for polygon clipping and offsetting based on Clipper2.',
     ext_modules=[CMakeExtension('pyclipr.pyclipr', 'pyclipr')],
     cmdclass=dict(build_ext=CMakeBuild),
     packages = ['pyclipr'],
