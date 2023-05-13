@@ -100,7 +100,7 @@ set(CPP_FMT
     external/fmt/include
 )
 
-#add_compile_definitions(
+add_definitions(-DUSINGZ=1)
 
 link_directories(
 )

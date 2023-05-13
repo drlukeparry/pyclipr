@@ -23,7 +23,36 @@ namespace py = pybind11;
 namespace pyclipr {
 
 typedef Eigen::Matrix<uint64_t,Eigen::Dynamic,2> EigenVec2i;
-typedef Eigen::Matrix<double,Eigen::Dynamic,2> EigenVec2d;
+typedef Eigen::Matrix<double,Eigen::Dynamic,1>   EigenVec1d;
+typedef Eigen::Matrix<double,Eigen::Dynamic,2>   EigenVec2d;
+typedef Eigen::Matrix<double,Eigen::Dynamic,3>   EigenVec3d;
+
+
+
+static void myZCB(const Point64& e1bot, const Point64& e1top, const Point64& e2bot, const Point64& e2top, Point64& pt) {
+    // Find the maximum z value from all points. Using a background value of Zero for the contour allows, individual data
+    // to be isolated.
+
+    // Assume contour or clipping polygons has the lowest value
+    int64_t maxZ = std::numeric_limits<int64_t>::lowest();
+
+    if(e1bot.z > maxZ)
+        maxZ = e1bot.z;
+
+    if(e1top.z > maxZ)
+        maxZ = e1top.z;
+
+    if(e2top.z > maxZ)
+        maxZ = e2top.z;
+
+    if(e2bot.z > maxZ)
+        maxZ = e2bot.z;
+
+    // Assign the z value to pt
+    pt.z = maxZ;
+};
+
+
 
 Clipper2Lib::Path64 simplifyPath(const Clipper2Lib::Path64 &path, double epsilon, bool isOpenPath = false)
 {
@@ -40,23 +69,20 @@ Paths64 polyTreeToPaths64(const Clipper2Lib::PolyTree64 &polytree)
     return Clipper2Lib::PolyTreeToPaths64(polytree);
 }
 
-void applyScaleFactor(const Clipper2Lib::PolyPath64 & polyPath, Clipper2Lib::PolyPath64 &newPath, uint64_t scaleFactor, bool invert = true) {
+PathsD polyTreeToPathsD(const Clipper2Lib::PolyTreeD &polytree)
+{
+    return Clipper2Lib::PolyTreeToPathsD(polytree);
+}
+
+void applyScaleFactor(const Clipper2Lib::PolyPath64 & polyPath,
+                      Clipper2Lib::PolyPathD &newPath, uint64_t scaleFactor, bool invert = true) {
 // Create a recursive copy of the structure
 
     for(uint64_t i = 0; i < polyPath.Count(); i++)
     {
         Clipper2Lib::Path64 path = polyPath[i]->Polygon();
-
-        for (uint64_t j=0; j < path.size(); j++) {
-            if (!invert) {
-                path[j].x *= scaleFactor;
-                path[j].y *= scaleFactor;
-
-            } else {
-                path[j].x /= scaleFactor;
-                path[j].y /= scaleFactor;
-            }
-        }
+        Clipper2Lib::PolyPathD pathD;
+        newPath.SetInvScale(1.0/scaleFactor);
 
         auto newChild = newPath.AddChild(path);
 
@@ -70,61 +96,56 @@ class Clipper : public Clipper2Lib::Clipper64 {
 
 public:
 // Write consturctor and destructor
-    Clipper() : Clipper2Lib::Clipper64(), scaleFactor(1000.0) {}
+    Clipper() : Clipper2Lib::Clipper64(), scaleFactor(1000.0) {
+        this->SetZCallback(myZCB);
+    }
     ~Clipper() {}
 
 public:
 
-    void addPath(const std::vector<std::tuple<uint64_t,uint64_t>> & path,
-                 Clipper2Lib::PathType polyType, bool isOpen)
+   void addPath(const py::array_t<double> &path,
+                 Clipper2Lib::PathType polyType,
+                 bool isOpen)
     {
-       // Not used
         Clipper2Lib::Path64 p;
 
-        for(auto pnt : path) {
-            p.push_back(Clipper2Lib::Point64(std::get<0>(pnt), std::get<1>(pnt)));
+        if (path.ndim() != 2)
+            throw std::runtime_error("Number of dimensions must be two");
+
+        if (!(path.shape(1) == 2 || path.shape(1) == 3))
+            throw std::runtime_error("Path must be nx2, or nx3");
+
+        // Resize the path list
+        p.reserve(path.shape(0));
+
+        auto r = path.unchecked<2>();
+
+        if(path.shape(1) == 2) {
+            for(uint64_t i=0; i < path.shape(0); i++)
+                p.push_back(Clipper2Lib::Point64(r(i,0) * scaleFactor, r(i,1) * scaleFactor));
+
+        } else {
+            for(uint64_t i=0; i < path.shape(0); i++)
+                p.push_back(Clipper2Lib::Point64(r(i,0) * scaleFactor, r(i,1) * scaleFactor, r(i,2)));
+
         }
 
         this->AddPath(p, polyType, isOpen);
     }
 
-    void addPathB(const EigenVec2d& path,
-                 Clipper2Lib::PathType polyType, bool isOpen)
+    void addPaths(const std::vector<pybind11::array_t<double>> paths,
+              Clipper2Lib::PathType polyType,
+              bool isOpen)
     {
-        Clipper2Lib::Path64 p;
-        p.reserve(path.rows());
-
-        for(uint64_t i=0; i< path.rows(); i++) {
-            p.push_back(Clipper2Lib::Point64(path(i,0) * scaleFactor, path(i,1) * scaleFactor));
-        }
-
-        this->AddPath(p, polyType, isOpen);
-    }
-
-    void addPaths(const std::vector<EigenVec2d> paths,
-                  Clipper2Lib::PathType polyType, bool isOpen)
-    {
-
-        for(auto path : paths) {
-
-            Clipper2Lib::Path64 p;
-            p.reserve(path.rows());
-
-            for(uint64_t i=0; i< path.rows(); i++) {
-
-                p.push_back(Clipper2Lib::Point64(path(i,0) * scaleFactor, path(i,1) * scaleFactor));
-            }
-
-            this->AddPath(p, polyType, isOpen);
-        }
-
+        for(auto path : paths)
+            addPath(path, polyType, isOpen);
     }
 
     void cleanUp() { this->CleanUp(); }
     void clear() { this->Clear(); }
 
-
-    py::object execute(Clipper2Lib::ClipType clipType,  Clipper2Lib::FillRule fillRule, bool returnOpenPaths = false) {
+    py::object execute(Clipper2Lib::ClipType clipType,  Clipper2Lib::FillRule fillRule,
+                       bool returnOpenPaths = false, bool returnZ = false) {
 
         Paths64 closedPaths;
         Paths64 openPaths;
@@ -132,69 +153,93 @@ public:
         this->Execute(clipType, fillRule, closedPaths, openPaths);
 
         std::vector<EigenVec2d> closedOut;
+        std::vector<EigenVec1d> closedOutZ;
+        std::vector<EigenVec2d> openOut;
+        std::vector<EigenVec1d> openOutZ;
 
         for (auto &path : closedPaths) {
 
             EigenVec2d eigPath(path.size(), 2);
+            EigenVec1d eigPathZ(path.size(), 1);
 
-            for (uint64_t i=0; i<path.size(); i++) {
-                eigPath(i,0) = path[i].x;
-                eigPath(i,1) = path[i].y;
+            for (uint64_t i=0; i < path.size(); i++) {
+                eigPath(i,0) = double(path[i].x) / scaleFactor;
+                eigPath(i,1) = double(path[i].y) / scaleFactor;
+
+                if(returnZ)
+                    eigPathZ(i, 0) = path[i].z;
             }
 
-            eigPath /= scaleFactor;
             closedOut.push_back(eigPath);
+
+            if(returnZ)
+                closedOutZ.push_back(eigPathZ);
         }
 
         if(!returnOpenPaths) {
-            return py::cast(closedOut);
+            return py::make_tuple(closedOut, closedOutZ);
         } else {
 
-            std::vector<EigenVec2d> openOut;
             for (auto &path : openPaths) {
 
+                EigenVec1d eigPathZ(path.size(), 1);
                 EigenVec2d eigPath(path.size(), 2);
 
                 for (uint64_t i=0; i<path.size(); i++) {
-                    eigPath(i,0) = path[i].x;
-                    eigPath(i,1) = path[i].y;
+                    eigPath(i,0) = double(path[i].x) / scaleFactor;
+                    eigPath(i,1) = double(path[i].y) / scaleFactor;
+
+                    if(returnZ) {
+                        //std::cout << "OP: assign z" << path[i].z;
+                        eigPathZ(i) = path[i].z;
+                    }
                 }
 
-                eigPath /= scaleFactor;
                 openOut.push_back(eigPath);
+                openOutZ.push_back(eigPathZ);
             }
 
-            return py::make_tuple(closedOut, openOut);
+            return py::make_tuple(closedOut, openOut, closedOutZ, openOutZ);
         }
     }
 
-    py::object execute2(Clipper2Lib::ClipType clipType, Clipper2Lib::FillRule fillRule, bool returnOpenPaths = false) {
+    py::object execute2(Clipper2Lib::ClipType clipType, Clipper2Lib::FillRule fillRule,
+                        bool returnOpenPaths = false, bool returnZ = false) {
 
         Clipper2Lib::PolyTree64 polytree;
         Clipper2Lib::Paths64 openPaths;
 
         this->Execute(clipType, fillRule, polytree, openPaths);
 
-        PolyTree64 *polytreeCpy = new PolyTree64();
+        PolyTreeD *polytreeCpy = new PolyTreeD();
 
         applyScaleFactor(polytree, *polytreeCpy, scaleFactor);
 
         if(returnOpenPaths) {
-            std::vector<EigenVec2d> out2;
+
+            std::vector<EigenVec2d> openPathOut;
+            std::vector<EigenVec1d> openPathOutZ;
+
             for (auto &path : openPaths) {
 
+                //EigenVec2d eigPath(path.size(), 2);
                 EigenVec2d eigPath(path.size(), 2);
+                EigenVec1d eigPathZ(path.size(), 1);
 
                 for (uint64_t i=0; i<path.size(); i++) {
-                    eigPath(i,0) = path[i].x;
-                    eigPath(i,1) = path[i].y;
+                    eigPath(i,0) = double(path[i].x) / scaleFactor;
+                    eigPath(i,1) = double(path[i].y) / scaleFactor;
+
+                    if(returnZ)
+                        eigPathZ(i) = path[i].z;
                 }
 
-                eigPath /= scaleFactor;
-                out2.push_back(eigPath);
+                openPathOut.push_back(eigPath);
+                openPathOutZ.push_back(eigPathZ);
+
             }
 
-            return py::make_tuple(polytreeCpy, out2);
+            return py::make_tuple(polytreeCpy, openPathOut, openPathOutZ);
         } else {
             return  py::cast(polytreeCpy);
         }
@@ -215,50 +260,43 @@ public:
 
 public:
 
-    void addPath(const std::vector<std::tuple<uint64_t,uint64_t>> & path,
-                 Clipper2Lib::JoinType joinType, Clipper2Lib::EndType endType)
-    {
-       // Not used
-        Clipper2Lib::Path64 p;
-
-        for(auto pnt : path) {
-            p.push_back(Clipper2Lib::Point64(std::get<0>(pnt), std::get<1>(pnt)));
-        }
-
-        this->AddPath(p, joinType, endType);
-    }
-
-    void addPathB(const EigenVec2d& path,
+    void addPath(const pybind11::array_t<double>& path,
                  Clipper2Lib::JoinType joinType,
                  Clipper2Lib::EndType endType = Clipper2Lib::EndType::Polygon)
     {
         Clipper2Lib::Path64 p;
-        p.reserve(path.rows());
 
-        for(uint64_t i=0; i< path.rows(); i++) {
-            p.push_back(Clipper2Lib::Point64(path(i,0) * scaleFactor, path(i,1) * scaleFactor));
+        if (path.ndim() != 2)
+            throw std::runtime_error("Number of dimensions must be two");
+
+        if (!(path.shape(1) == 2 || path.shape(1) == 3))
+            throw std::runtime_error("Path must be nx2, or nx3");
+
+        // Resize the path list
+        p.reserve(path.shape(0));
+
+        auto r = path.unchecked<2>();
+
+
+        if(path.shape(1) == 2) {
+            for(uint64_t i=0; i < path.shape(0); i++)
+                p.push_back(Clipper2Lib::Point64(r(i,0) * scaleFactor, r(i,1) * scaleFactor));
+        } else {
+            for(uint64_t i=0; i < path.shape(0); i++)
+                p.push_back(Clipper2Lib::Point64(r(i,0) * scaleFactor, r(i,1) * scaleFactor, r(i,2)));
         }
 
         this->AddPath(p, joinType, endType);
+
     }
 
-    void addPaths(const std::vector<EigenVec2d> paths,
+    void addPaths(const std::vector<pybind11::array_t<double>> paths,
                   Clipper2Lib::JoinType joinType,
                   Clipper2Lib::EndType endType = Clipper2Lib::EndType::Polygon)
     {
 
-        for(auto path : paths) {
-
-            Clipper2Lib::Path64 p;
-            p.reserve(path.rows());
-
-            for(uint64_t i=0; i< path.rows(); i++) {
-
-                p.push_back(Clipper2Lib::Point64(path(i,0) * scaleFactor, path(i,1) * scaleFactor));
-            }
-
-            this->AddPath(p, joinType, endType);
-        }
+        for(auto path : paths)
+            addPath(path, joinType, endType);
 
     }
 
@@ -277,11 +315,10 @@ public:
             EigenVec2d eigPath(path.size(), 2);
 
             for (uint64_t i=0; i<path.size(); i++) {
-                eigPath(i,0) = path[i].x;
-                eigPath(i,1) = path[i].y;
+                eigPath(i,0) = double(path[i].x) / scaleFactor;
+                eigPath(i,1) = double(path[i].y) / scaleFactor;
             }
 
-            eigPath /= scaleFactor;
             closedOut.push_back(eigPath);
         }
 
@@ -290,13 +327,13 @@ public:
 
     }
 
-    PolyTree64 * execute2(double delta) {
+    PolyTreeD * execute2(double delta) {
 
         Clipper2Lib::PolyTree64 polytree;
 
         this->Execute(delta * scaleFactor, polytree);
 
-        PolyTree64 *polytreeCpy = new PolyTree64();
+        PolyTreeD *polytreeCpy = new PolyTreeD();
 
         applyScaleFactor(polytree, *polytreeCpy, scaleFactor);
 
@@ -367,14 +404,25 @@ PYBIND11_MODULE(pyclipr, m) {
         /* .def(py::init<>()) */
         .def_property_readonly("isHole", &Clipper2Lib::PolyPath64::IsHole)
         .def_property_readonly("area",   &Clipper2Lib::PolyPath64::Area)
+        .def_property_readonly("attributes", [](const Clipper2Lib::PolyPath64 &s ) {
+            Clipper2Lib::Path64 path = s.Polygon();
+
+            pyclipr::EigenVec1d eigPath(path.size(), 1);
+
+            for (uint64_t i=0; i<path.size(); i++)
+                eigPath(i,0) = path[i].z;
+
+            return eigPath;
+        })
         .def_property_readonly("polygon", [](const Clipper2Lib::PolyPath64 &s ) {
             Clipper2Lib::Path64 path = s.Polygon();
 
-            pyclipr::EigenVec2d eigPath(path.size(), 2);
+            pyclipr::EigenVec2d eigPath(path.size(), 3);
 
             for (uint64_t i=0; i<path.size(); i++) {
                 eigPath(i,0) = path[i].x;
                 eigPath(i,1) = path[i].y;
+                //eigPath(i,2) = path[i].z;
             }
             return eigPath;
         })
@@ -390,9 +438,46 @@ PYBIND11_MODULE(pyclipr, m) {
         .def("__len__", [](const Clipper2Lib::PolyTree64 &s ) { return s.Count(); });
 
 
-    m.def("polyTreeToPaths64", &pyclipr::polyTreeToPaths64, py::return_value_policy::automatic
+    py::class_<Clipper2Lib::PolyPathD>(m, "PolyTreeD")
+            /* .def(py::init<>()) */
+            .def_property_readonly("isHole", &Clipper2Lib::PolyPathD::IsHole)
+            .def_property_readonly("area",   &Clipper2Lib::PolyPathD::Area)
+            .def_property_readonly("attributes", [](const Clipper2Lib::PolyPathD &s ) {
+                Clipper2Lib::PathD path = s.Polygon();
 
+                pyclipr::EigenVec1d eigPath(path.size(), 1);
+
+                for (uint64_t i=0; i<path.size(); i++)
+                    eigPath(i,0) = path[i].z;
+
+                return eigPath;
+            })
+            .def_property_readonly("polygon", [](const Clipper2Lib::PolyPathD &s ) {
+                Clipper2Lib::PathD path = s.Polygon();
+
+                pyclipr::EigenVec2d eigPath(path.size(), 2);
+
+                for (uint64_t i=0; i<path.size(); i++) {
+                    eigPath(i,0) = path[i].x;
+                    eigPath(i,1) = path[i].y;
+                    //eigPath(i,2) = path[i].z;
+                }
+                return eigPath;
+            })
+            .def_property_readonly("children", [](const Clipper2Lib::PolyPathD &s ) {
+                std::vector<const Clipper2Lib::PolyPathD *> children;
+                for (int i = 0; i < s.Count(); i++)
+                    children.push_back(s[i]);
+
+                return children;
+            })
+            .def_property_readonly("count", &Clipper2Lib::PolyPathD::Count)
+            .def("__len__", [](const Clipper2Lib::PolyTreeD &s ) { return s.Count(); });
+
+
+    m.def("polyTreeToPaths64", &pyclipr::polyTreeToPaths64, py::return_value_policy::automatic
     )
+    .def("polyTreeToPaths", &pyclipr::polyTreeToPaths64, py::return_value_policy::automatic)
     .def("simplifyPath", &pyclipr::simplifyPath, py::arg("path"), py::arg("epsilon"), py::arg("isOpenPath") = false,
                         py::return_value_policy::automatic, R"(
             This function removes vertices that are less than the specified epsilon distance from an imaginary line
@@ -418,7 +503,7 @@ PYBIND11_MODULE(pyclipr, m) {
              prevents this default behavior to allow these inner vertices to appear in the solution.
          )" )
         //.def("addPath", &pyclipr::Clipper::addPath)
-        .def("addPath", &pyclipr::Clipper::addPathB, py::arg("path"), py::arg("pathType"), py::arg("isClosed") = true, R"(
+        .def("addPath", &pyclipr::Clipper::addPath, py::arg("path"), py::arg("pathType"), py::arg("isClosed") = true, R"(
             The addPath method adds one or more closed subject paths (polygons) to the Clipper object.
 
             :param path: A list of 2D points (x,y) that define the path. Tuple or a numpy array may be provided
@@ -426,19 +511,20 @@ PYBIND11_MODULE(pyclipr, m) {
             :param isClosed: A boolean value that indicates whether the path is closed or not. Default is 'True'
             :return: None
         )" )
-
         .def("addPaths", &pyclipr::Clipper::addPaths, py::arg("paths"), py::arg("pathType"), py::arg("isClosed") = true, R"(
             The AddPath method adds one or more closed subject paths (polygons) to the Clipper object.
 
             :param path: A list paths, each consisting 2D points (x,y) that define the path. A Tuple or a numpy array may be provided
             :param pathType: A PathType enum value that indicates whether the path is a subject or a clip path.
-            :param isClosed: A boolean value that indicates whether the path is closed or not. Default is 'True'
+            :param isClosed: A boolean value that indicates whether the path is closed or not. Default is `True`
+             :param returnZ: If `True`, returns a seperate array of the Z attributes for clipped paths. Default is `False`
             :return: None
         )" )
         .def("execute", &pyclipr::Clipper::execute,
                           py::arg("clipType"),
                           py::arg("fillType") =  Clipper2Lib::FillRule::EvenOdd,
                           py::kw_only(), py::arg("returnOpenPaths") = false,
+                          py::arg("returnZ") = false,
                           py::return_value_policy::take_ownership, R"(
             The execute method performs the Boolean clipping operation on the polygons or paths that have been added
             to the clipper object. This method will return a list of paths from the result. The default fillType is
@@ -453,6 +539,7 @@ PYBIND11_MODULE(pyclipr, m) {
                           py::arg("clipType"),
                           py::arg("fillType") =  Clipper2Lib::FillRule::EvenOdd,
                           py::kw_only(), py::arg("returnOpenPaths") = false,
+                          py::arg("returnZ") = false,
                           py::return_value_policy::take_ownership, R"(
             The execute method performs the Boolean clipping operation on the polygons or paths that have been added
             to the clipper object. This method will return a list of paths from the result. The default fillType is
@@ -460,7 +547,8 @@ PYBIND11_MODULE(pyclipr, m) {
 
             :param clipType: The ClipType or the clipping operation to be used for the paths
             :param fillType: A FillType enum value that indicates the fill representation for the paths
-            :param returnOpenPaths: If `True`, returns a tuple consisting of both open and closed paths
+            :param returnOpenPaths: If `True`, returns a tuple consisting of both open and closed paths. Default is `False`
+            :param returnZ: If `True`, returns a seperate array of the Z attributes for clipped paths. Default is `False`
             :return: A resultant paths that have been clipped )"
             )
         .def("clear", &pyclipr::Clipper::clear, R"(The clear method removes all the paths from the Clipper object.)" )
@@ -498,8 +586,7 @@ PYBIND11_MODULE(pyclipr, m) {
              the Clipper object removes the 'inner' vertices before clipping. When enabled the PreserveCollinear property
              prevents this default behavior to allow these inner vertices to appear in the solution. )"
          )
-        //.def("addPath", &pyclipr::Clipper::addPath)
-        .def("addPath", &pyclipr::ClipperOffset::addPathB, py::arg("path"),
+        .def("addPath", &pyclipr::ClipperOffset::addPath, py::arg("path"),
                          py::arg("joinType"),
                          py::arg("endType") = Clipper2Lib::EndType::Polygon, R"(
             The addPath method adds one open / closed   paths (polygons) to the ClipperOffset object.
@@ -509,7 +596,6 @@ PYBIND11_MODULE(pyclipr, m) {
             :param endType: The EndType to use for the offseting / inflation of paths (default is Polygon)
             :return: None )"
         )
-
         .def("addPaths", &pyclipr::ClipperOffset::addPaths, py::arg("path"),
                           py::arg("joinType"),
                           py::arg("endType") = Clipper2Lib::EndType::Polygon, R"(
