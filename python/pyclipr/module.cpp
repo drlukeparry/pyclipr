@@ -328,7 +328,6 @@ public:
 
 
         return closedOut;
-
     }
 
     PolyTreeD * execute2(double delta) {
