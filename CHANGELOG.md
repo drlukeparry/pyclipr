@@ -10,6 +10,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [0.1.0] - 2023-04-01
+## [0.1.0] - 2023-07-14
 
   The first release of PyClipr in its distributed packaged form via PyPi. This release includes the basic functionality and refactoring to compile
