@@ -82,7 +82,7 @@ void applyScaleFactor(const Clipper2Lib::PolyPath64 & polyPath,
     {
         Clipper2Lib::Path64 path = polyPath[i]->Polygon();
         Clipper2Lib::PolyPathD pathD;
-        newPath.SetInvScale(1.0/scaleFactor);
+        newPath.SetScale(1.0/scaleFactor);
 
         auto newChild = newPath.AddChild(path);
 
@@ -177,7 +177,11 @@ public:
         }
 
         if(!returnOpenPaths) {
-            return py::make_tuple(closedOut, closedOutZ);
+            if(returnZ) {
+                return py::make_tuple(closedOut, closedOutZ);
+            } else {
+                return py::cast(closedOut);
+            }
         } else {
 
             for (auto &path : openPaths) {
