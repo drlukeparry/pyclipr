@@ -399,6 +399,9 @@ PYBIND11_MODULE(pyclipr, m) {
     .value("Round",   Clipper2Lib::EndType::Round)
     .export_values();
 
+	m.attr("clipperVersion")= CLIPPER2_VERSION;
+
+
     py::class_<Clipper2Lib::PolyPath>(m, "PolyPath")
         /*.def(py::init<>()) */
         .def_property_readonly("level", &Clipper2Lib::PolyPath::Level)
