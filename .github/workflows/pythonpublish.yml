@@ -1,0 +1,67 @@
+# This workflows will upload a Python Package using Twine when a release is created
+# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
+
+name: Upload Python Package
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9, '3.10', '3.11']]
+        os: [ubuntu-latest, , macos-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          submodules: recursive
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version}}
+    - name: Display Python version
+      run: python3 -c "import sys; print(sys.version)"
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install setuptools wheel twine
+    - name: Install APT On Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update -qq -y
+        sudo apt-get install -qq -y libglu1-mesa build-essential libeigen3-dev
+    - name: Install Brew On Mac
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install eigen
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install --user -r requirements.txt
+        pip3 install --upgrade cython
+
+    - name: Build
+      run: |
+        python3 setup.py bdist_wheel
+
+    - name: Publish (Windows)
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      if: matrix.os == 'windows-latest'
+      run: |
+        twine upload dist/*
+
+    - name: Publish (Mac OS)
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      if: matrix.os == 'macos-latest'
+      run: |
+        python3 -m twine upload dist/*
+
