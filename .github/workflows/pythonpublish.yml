@@ -35,7 +35,7 @@ jobs:
       run: |
         sudo apt-get update -qq -y
         sudo apt-get install -qq -y libglu1-mesa build-essential libeigen3-dev
-    - name: Install Brew On Mac
+    - name: Install Brew On Mac OS
       if: matrix.os == 'macos-latest'
       run: |
         brew install eigen
