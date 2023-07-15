@@ -509,21 +509,21 @@ PYBIND11_MODULE(pyclipr, m) {
              prevents this default behavior to allow these inner vertices to appear in the solution.
          )" )
         //.def("addPath", &pyclipr::Clipper::addPath)
-        .def("addPath", &pyclipr::Clipper::addPath, py::arg("path"), py::arg("pathType"), py::arg("isClosed") = true, R"(
+        .def("addPath", &pyclipr::Clipper::addPath, py::arg("path"), py::arg("pathType"), py::arg("isOpen") = false, R"(
             The addPath method adds one or more closed subject paths (polygons) to the Clipper object.
 
             :param path: A list of 2D points (x,y) that define the path. Tuple or a numpy array may be provided
             :param pathType: A PathType enum value that indicates whether the path is a subject or a clip path.
-            :param isClosed: A boolean value that indicates whether the path is closed or not. Default is 'True'
+            :param isOpen: A boolean value that indicates whether the path is closed or not. Default is 'False'
             :return: None
         )" )
-        .def("addPaths", &pyclipr::Clipper::addPaths, py::arg("paths"), py::arg("pathType"), py::arg("isClosed") = true, R"(
+        .def("addPaths", &pyclipr::Clipper::addPaths, py::arg("paths"), py::arg("pathType"), py::arg("isOpen") = false, R"(
             The AddPath method adds one or more closed subject paths (polygons) to the Clipper object.
 
             :param path: A list paths, each consisting 2D points (x,y) that define the path. A Tuple or a numpy array may be provided
             :param pathType: A PathType enum value that indicates whether the path is a subject or a clip path.
-            :param isClosed: A boolean value that indicates whether the path is closed or not. Default is `True`
-             :param returnZ: If `True`, returns a seperate array of the Z attributes for clipped paths. Default is `False`
+            :param isOpen: A boolean value that indicates whether the path is closed or not. Default is `False`
+            :param returnZ: If `True`, returns a seperate array of the Z attributes for clipped paths. Default is `False`
             :return: None
         )" )
         .def("execute", &pyclipr::Clipper::execute,

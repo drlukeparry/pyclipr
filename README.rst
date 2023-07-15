@@ -92,8 +92,8 @@ by using either `execute` or `execute2` methods, respectively.
     # Add the paths to the clipping object. Ensure the subject and clip arguments are set to differentiate
     # the paths during the Boolean operation. The final argument specifies if the path is
     # open.
-    pc.addPaths(offsetSquare, pyclipr.Subject, False)
-    pc.addPath(np.array(path2), pyclipr.Clip, False)
+    pc.addPaths(offsetSquare, pyclipr.Subject)
+    pc.addPath(np.array(path2), pyclipr.Clip)
 
     """ Test Polygon Clipping """
     # Below returns paths
