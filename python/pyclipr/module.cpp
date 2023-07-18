@@ -536,7 +536,13 @@ PYBIND11_MODULE(pyclipr, m) {
                         py::return_value_policy::automatic, R"(
             This function removes vertices that are less than the specified epsilon distance from an imaginary line
             that passes through its 2 adjacent vertices. Logically, smaller epsilon values will be less aggressive
-            in removing vertices than larger epsilon values. )"
+            in removing vertices than larger epsilon values.
+
+            :param paths: A list of 2D points (x,y) that define the path. Tuple or a numpy array may be provided for the path
+            :param epsilon: The maximum distance a vertex can be from an imaginary line that passes through its 2 adjacent vertices.
+            :param isOpenPath: If `True``, the path is treated as an open path. If `False`, the path is treated as a closed path.
+            :return: None
+            )"
     );
 
 
@@ -637,7 +643,7 @@ PYBIND11_MODULE(pyclipr, m) {
         .def("addPath", &pyclipr::ClipperOffset::addPath, py::arg("path"),
                          py::arg("joinType"),
                          py::arg("endType") = Clipper2Lib::EndType::Polygon, R"(
-            The addPath method adds one open / closed   paths (polygons) to the ClipperOffset object.
+            The addPath method adds one open or closed paths (polygon) to the ClipperOffset object.
 
             :param path: A list of 2D points (x,y) that define the path. Tuple or a numpy array may be provided for the path
             :param joinType: The JoinType to use for the offseting / inflation of paths
@@ -649,7 +655,7 @@ PYBIND11_MODULE(pyclipr, m) {
                           py::arg("endType") = Clipper2Lib::EndType::Polygon, R"(
             The addPath method adds one or more open / closed paths to the ClipperOffset object.
 
-            :param path: A list of paths conisting of 2D points (x,y) that define the path. Tuple or a numpy array may be provided for each path
+            :param path: A list of paths consisting of 2D points (x,y) that define the path. Tuple or a numpy array may be provided for each path
             :param joinType: The JoinType to use for the offseting / inflation of paths
             :param endType: The EndType to use for the offseting / inflation of paths
             :return: None)"
@@ -660,8 +666,8 @@ PYBIND11_MODULE(pyclipr, m) {
             The execute method performs the offseting/inflation operation on the polygons or paths that have been added
             to the clipper object. This method will return a list of paths from the result.
 
-            :param delta: The offset to apply to the inflation/offseting
-            :return: A resultant offset paths
+            :param delta: The offset to apply to the inflation/offseting of paths and segments
+            :return: The resultant offset paths
         )")
         .def("execute2", &pyclipr::ClipperOffset::execute2,
                           py::arg("delta"),
