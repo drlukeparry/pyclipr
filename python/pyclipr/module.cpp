@@ -64,6 +64,35 @@ Clipper2Lib::Paths64 simplifyPaths(const Clipper2Lib::Paths64 &paths, double eps
     return Clipper2Lib::SimplifyPaths(paths, epsilon, isOpenPath);
 }
 
+bool orientation(const py::array_t<double> &path, float scaleFactor = 1000)
+{
+
+    Clipper2Lib::Path64 p;
+
+    if (path.ndim() != 2)
+        throw std::runtime_error("Number of dimensions must be two");
+
+    if (!(path.shape(1) == 2 || path.shape(1) == 3))
+        throw std::runtime_error("Path must be nx2, or nx3");
+
+    // Resize the path list
+    p.reserve(path.shape(0));
+
+    auto r = path.unchecked<2>();
+
+    if(path.shape(1) == 2) {
+        for(uint64_t i=0; i < path.shape(0); i++)
+            p.push_back(Clipper2Lib::Point64(r(i,0) * scaleFactor, r(i,1) * scaleFactor));
+
+    } else {
+        for(uint64_t i=0; i < path.shape(0); i++)
+            p.push_back(Clipper2Lib::Point64(r(i,0) * scaleFactor, r(i,1) * scaleFactor, r(i,2)));
+
+    }
+
+    return Clipper2Lib::IsPositive(p);
+}
+
 Paths64 polyTreeToPaths64(const Clipper2Lib::PolyTree64 &polytree)
 {
     return Clipper2Lib::PolyTreeToPaths64(polytree);
@@ -481,14 +510,27 @@ PYBIND11_MODULE(pyclipr, m) {
             .def("__len__", [](const Clipper2Lib::PolyTreeD &s ) { return s.Count(); });
 
 
-    m.def("polyTreeToPaths64", &pyclipr::polyTreeToPaths64, py::return_value_policy::automatic
-    )
+    m.def("polyTreeToPaths64", &pyclipr::polyTreeToPaths64, py::return_value_policy::automatic)
+    .def("orientation", &pyclipr::orientation, py::arg("path"), py::arg("scaleFactor") = 1000,
+         py::return_value_policy::automatic, R"(
+        This function returns the orientation of a path. Orientation will return `true` if the polygon's orientation
+        is counter-clockwise.
+
+        :param path: A 2D numpy array of shape (n, 2) or (n, 3) where n is the number of vertices in the path.
+        :param scaleFactor: Optional scale factor for the internal clipping factor. Defaults to 1000.
+        :return: `True` if the polygon's orientation is counter-clockwise, `False` otherwise.
+        )" )
     .def("polyTreeToPaths", &pyclipr::polyTreeToPaths64, py::return_value_policy::automatic)
     .def("simplifyPath", &pyclipr::simplifyPath, py::arg("path"), py::arg("epsilon"), py::arg("isOpenPath") = false,
                         py::return_value_policy::automatic, R"(
             This function removes vertices that are less than the specified epsilon distance from an imaginary line
             that passes through its 2 adjacent vertices. Logically, smaller epsilon values will be less aggressive
-            in removing vertices than larger epsilon values. )"
+            in removing vertices than larger epsilon values.
+
+            :param path: A 2D numpy array of shape (n, 2) or (n, 3) where n is the number of vertices in the path.
+            :param epsilon: The maximum distance a vertex can be from an imaginary line that passes through its 2 adjacent vertices.
+            :param isOpenPath: If `True``, the path is treated as an open path. If `False`, the path is treated as a closed path.
+            :return: Simplified path)"
      )
     .def("simplifyPaths", &pyclipr::simplifyPaths, py::arg("paths"), py::arg("epsilon"), py::arg("isOpenPath") = false,
                         py::return_value_policy::automatic, R"(
