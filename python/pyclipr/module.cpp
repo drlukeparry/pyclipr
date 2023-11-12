@@ -299,15 +299,15 @@ public:
 class ClipperOffset : public Clipper2Lib::ClipperOffset {
 
 public:
-// Write consturctor and destructor
+    // Consturctor and destructor
     ClipperOffset() : Clipper2Lib::ClipperOffset(), scaleFactor(1000.0) {}
     ~ClipperOffset() {}
 
 public:
 
     void addPath(const pybind11::array_t<double>& path,
-                 Clipper2Lib::JoinType joinType,
-                 Clipper2Lib::EndType endType = Clipper2Lib::EndType::Polygon)
+                 const Clipper2Lib::JoinType joinType,
+                 const Clipper2Lib::EndType endType = Clipper2Lib::EndType::Polygon)
     {
         Clipper2Lib::Path64 p;
 
@@ -401,43 +401,6 @@ PYBIND11_MODULE(pyclipr, m) {
 
     )pbdoc";
 
-
-    /*
-     * Specify enums first
-     */
-
-    py::enum_<Clipper2Lib::PathType>(m, "PathType")
-    .value("Subject", Clipper2Lib::PathType::Subject)
-    .value("Clip",    Clipper2Lib::PathType::Clip)
-    .export_values();
-
-    py::enum_<Clipper2Lib::ClipType>(m, "ClipType")
-    .value("Union",        Clipper2Lib::ClipType::Union)
-    .value("Difference",   Clipper2Lib::ClipType::Difference)
-    .value("Intersection", Clipper2Lib::ClipType::Intersection)
-    .value("Xor",          Clipper2Lib::ClipType::Xor)
-    .export_values();
-
-    py::enum_<Clipper2Lib::FillRule>(m, "FillType")
-    .value("EvenOdd",  Clipper2Lib::FillRule::EvenOdd)
-    .value("NonZero",  Clipper2Lib::FillRule::NonZero)
-    .value("Positive", Clipper2Lib::FillRule::Positive)
-    .value("Negative", Clipper2Lib::FillRule::Negative)
-    .export_values();
-
-    py::enum_<Clipper2Lib::JoinType>(m, "JoinType")
-    .value("Square", Clipper2Lib::JoinType::Square)
-    .value("Round",  Clipper2Lib::JoinType::Round)
-    .value("Miter",  Clipper2Lib::JoinType::Miter)
-    .export_values();
-
-    py::enum_<Clipper2Lib::EndType>(m, "EndType")
-    .value("Square",  Clipper2Lib::EndType::Square)
-    .value("Butt",    Clipper2Lib::EndType::Butt)
-    .value("Joined",  Clipper2Lib::EndType::Joined)
-    .value("Polygon", Clipper2Lib::EndType::Polygon)
-    .value("Round",   Clipper2Lib::EndType::Round)
-    .export_values();
 
 	m.attr("clipperVersion")= CLIPPER2_VERSION;
 
@@ -558,8 +521,34 @@ PYBIND11_MODULE(pyclipr, m) {
     );
 
 
-    py::class_<pyclipr::Clipper>(m, "Clipper")
-        .def(py::init<>())
+    py::class_<pyclipr::Clipper> clipper(m, "Clipper");
+
+
+    /*
+     * Path types are exported for convenience because these tend to be used often
+     */
+    py::enum_<Clipper2Lib::PathType>(m, "PathType")
+        .value("Subject", Clipper2Lib::PathType::Subject)
+        .value("Clip",    Clipper2Lib::PathType::Clip)
+    .export_values();
+
+    /*
+     * Boolean ops are exported for convenience because these tend to be used often
+     */
+    py::enum_<Clipper2Lib::ClipType>(m, "ClipType")
+        .value("Union",        Clipper2Lib::ClipType::Union)
+        .value("Difference",   Clipper2Lib::ClipType::Difference)
+        .value("Intersection", Clipper2Lib::ClipType::Intersection)
+        .value("Xor",          Clipper2Lib::ClipType::Xor)
+    .export_values();
+
+    py::enum_<Clipper2Lib::FillRule>(m, "FillRule")
+        .value("EvenOdd",  Clipper2Lib::FillRule::EvenOdd)
+        .value("NonZero",  Clipper2Lib::FillRule::NonZero)
+        .value("Positive", Clipper2Lib::FillRule::Positive)
+        .value("Negative", Clipper2Lib::FillRule::Negative);
+
+    clipper.def(py::init<>())
         .def_readwrite("scaleFactor", &pyclipr::Clipper::scaleFactor, R"(
             Scale factor to be for transforming the input and output vectors. The default is 1000 )"
          )
@@ -588,42 +577,78 @@ PYBIND11_MODULE(pyclipr, m) {
         )" )
         .def("execute", &pyclipr::Clipper::execute,
                           py::arg("clipType"),
-                          py::arg("fillType") =  Clipper2Lib::FillRule::EvenOdd,
+                          py::arg("fillRule") =  Clipper2Lib::FillRule::EvenOdd,
                           py::kw_only(), py::arg("returnOpenPaths") = false,
                           py::arg("returnZ") = false,
                           py::return_value_policy::take_ownership, R"(
             The execute method performs the Boolean clipping operation on the polygons or paths that have been added
-            to the clipper object. This method will return a list of paths from the result. The default fillType is
+            to the clipper object. This method will return a list of paths from the result. The default fillRule is
             even-odd typically used for the representation of polygons.
 
             :param clipType: The ClipType or the clipping operation to be used for the paths
-            :param fillType: A FillType enum value that indicates the fill representation for the paths
+            :param fillRule: A FillType enum value that indicates the fill representation for the paths
             :param returnOpenPaths: If `True`, returns a tuple consisting of both open and closed paths
+            :param returnZ: If `True`, returns a seperate array of the Z attributes for clipped paths. Default is `False`
             :return: A resultant paths that have been clipped )"
             )
         .def("execute2", &pyclipr::Clipper::execute2,
                           py::arg("clipType"),
-                          py::arg("fillType") =  Clipper2Lib::FillRule::EvenOdd,
+                          py::arg("fillRule") =  Clipper2Lib::FillRule::EvenOdd,
                           py::kw_only(), py::arg("returnOpenPaths") = false,
                           py::arg("returnZ") = false,
                           py::return_value_policy::take_ownership, R"(
-            The execute method performs the Boolean clipping operation on the polygons or paths that have been added
-            to the clipper object. This method will return a list of paths from the result. The default fillType is
-            even-odd typically used for the representation of polygons.
+            The execute2 method performs the Boolean clipping operation on the polygons or paths that have been added
+            to the clipper object. TThis method will return a PolyTree of the result structuring the output into the hierarchy of
+            the paths that form the exterior and interior polygon.
+
+            The default fillRule is even-odd typically used for the representation of polygons.
 
             :param clipType: The ClipType or the clipping operation to be used for the paths
-            :param fillType: A FillType enum value that indicates the fill representation for the paths
+            :param fillRule: A FillType enum value that indicates the fill representation for the paths
             :param returnOpenPaths: If `True`, returns a tuple consisting of both open and closed paths. Default is `False`
             :param returnZ: If `True`, returns a seperate array of the Z attributes for clipped paths. Default is `False`
-            :return: A resultant paths that have been clipped )"
+            :return: A resultant polytree of the clipped paths )"
             )
+
+        .def("executeTree", &pyclipr::Clipper::execute2,
+                        py::arg("clipType"),
+                        py::arg("fillRule") =  Clipper2Lib::FillRule::EvenOdd,
+                        py::kw_only(), py::arg("returnOpenPaths") = false,
+                        py::arg("returnZ") = false,
+                        py::return_value_policy::take_ownership, R"(
+        The executeTree method performs the Boolean clipping operation on the polygons or paths that have been added
+        to the clipper object. TThis method will return a PolyTree of the result structuring the output into the hierarchy of
+        the paths that form the exterior and interior polygon.
+
+        The default fillRule is even-odd typically used for the representation of polygons.
+
+        :param clipType: The ClipType or the clipping operation to be used for the paths
+        :param fillRule: A FillType enum value that indicates the fill representation for the paths
+        :param returnOpenPaths: If `True`, returns a tuple consisting of both open and closed paths. Default is `False`
+        :param returnZ: If `True`, returns a seperate array of the Z attributes for clipped paths. Default is `False`
+        :return: A resultant paths that have been clipped )"
+        )
         .def("clear", &pyclipr::Clipper::clear, R"(The clear method removes all the paths from the Clipper object.)" )
         .def("cleanUp", &pyclipr::Clipper::cleanUp);
 
 
 
-    py::class_<pyclipr::ClipperOffset>(m, "ClipperOffset")
-        .def(py::init<>())
+    py::class_<pyclipr::ClipperOffset> clipperOffset(m, "ClipperOffset");
+
+    py::enum_<Clipper2Lib::JoinType>(m, "JoinType")
+        .value("Square", Clipper2Lib::JoinType::Square)
+        .value("Round",  Clipper2Lib::JoinType::Round)
+        .value("Miter",  Clipper2Lib::JoinType::Miter);
+
+    py::enum_<Clipper2Lib::EndType>(m, "EndType")
+        .value("Square",  Clipper2Lib::EndType::Square)
+        .value("Butt",    Clipper2Lib::EndType::Butt)
+        .value("Joined",  Clipper2Lib::EndType::Joined)
+        .value("Polygon", Clipper2Lib::EndType::Polygon)
+        .value("Round",   Clipper2Lib::EndType::Round);
+
+
+    clipperOffset.def(py::init<>())
         .def_readwrite("scaleFactor", &pyclipr::ClipperOffset::scaleFactor, R"(
             Scale factor to be for transforming the input and output vectors. The default is 1000 )"
          )
