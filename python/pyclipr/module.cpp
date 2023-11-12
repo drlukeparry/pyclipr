@@ -1,4 +1,5 @@
 #include <string>
+#include <tuple>
 
 #include <Eigen/Eigen>
 
@@ -14,9 +15,7 @@
 #include <pybind11/complex.h>
 #include <pybind11/eigen.h>
 
-#include <tuple>
-
-using namespace Clipper2Lib;
+//using namespace Clipper2Lib;
 
 namespace py = pybind11;
 
@@ -29,7 +28,9 @@ typedef Eigen::Matrix<double,Eigen::Dynamic,3>   EigenVec3d;
 
 
 
-static void myZCB(const Point64& e1bot, const Point64& e1top, const Point64& e2bot, const Point64& e2top, Point64& pt) {
+static void myZCB(const Clipper2Lib::Point64& e1bot, const Clipper2Lib::Point64& e1top,
+                  const Clipper2Lib::Point64& e2bot, const Clipper2Lib::Point64& e2top,
+                  Clipper2Lib::Point64& pt) {
     // Find the maximum z value from all points. Using a background value of Zero for the contour allows, individual data
     // to be isolated.
 
@@ -64,7 +65,7 @@ Clipper2Lib::Paths64 simplifyPaths(const Clipper2Lib::Paths64 &paths, double eps
     return Clipper2Lib::SimplifyPaths(paths, epsilon, isOpenPath);
 }
 
-bool orientation(const py::array_t<double> &path, float scaleFactor = 1000)
+bool orientation(const py::array_t<double> &path, const float scaleFactor = 1000)
 {
 
     Clipper2Lib::Path64 p;
@@ -93,12 +94,12 @@ bool orientation(const py::array_t<double> &path, float scaleFactor = 1000)
     return Clipper2Lib::IsPositive(p);
 }
 
-Paths64 polyTreeToPaths64(const Clipper2Lib::PolyTree64 &polytree)
+Clipper2Lib::Paths64 polyTreeToPaths64(const Clipper2Lib::PolyTree64 &polytree)
 {
     return Clipper2Lib::PolyTreeToPaths64(polytree);
 }
 
-PathsD polyTreeToPathsD(const Clipper2Lib::PolyTreeD &polytree)
+Clipper2Lib::PathsD polyTreeToPathsD(const Clipper2Lib::PolyTreeD &polytree)
 {
     return Clipper2Lib::PolyTreeToPathsD(polytree);
 }
@@ -124,11 +125,12 @@ void applyScaleFactor(const Clipper2Lib::PolyPath64 & polyPath,
 class Clipper : public Clipper2Lib::Clipper64 {
 
 public:
-// Write consturctor and destructor
+
     Clipper() : Clipper2Lib::Clipper64(), scaleFactor(1000.0) {
         this->SetZCallback(myZCB);
     }
     ~Clipper() {}
+
 
 public:
 
@@ -163,8 +165,8 @@ public:
     }
 
     void addPaths(const std::vector<pybind11::array_t<double>> paths,
-              Clipper2Lib::PathType polyType,
-              bool isOpen)
+                  const Clipper2Lib::PathType polyType,
+                  bool isOpen)
     {
         for(auto path : paths)
             addPath(path, polyType, isOpen);
@@ -236,15 +238,16 @@ public:
         }
     }
 
-    py::object execute2(Clipper2Lib::ClipType clipType, Clipper2Lib::FillRule fillRule,
-                        bool returnOpenPaths = false, bool returnZ = false) {
+
+    py::object execute2(const Clipper2Lib::ClipType clipType, const Clipper2Lib::FillRule fillRule,
+                        const bool returnOpenPaths = false, const bool returnZ = false) {
 
         Clipper2Lib::PolyTree64 polytree;
         Clipper2Lib::Paths64 openPaths;
 
         this->Execute(clipType, fillRule, polytree, openPaths);
 
-        PolyTreeD *polytreeCpy = new PolyTreeD();
+        Clipper2Lib::PolyTreeD *polytreeCpy = new Clipper2Lib::PolyTreeD();
 
         applyScaleFactor(polytree, *polytreeCpy, scaleFactor);
 
@@ -255,7 +258,6 @@ public:
 
             for (auto &path : openPaths) {
 
-                //EigenVec2d eigPath(path.size(), 2);
                 EigenVec2d eigPath(path.size(), 2);
                 EigenVec1d eigPathZ(path.size(), 1);
 
@@ -324,8 +326,8 @@ public:
     }
 
     void addPaths(const std::vector<pybind11::array_t<double>> paths,
-                  Clipper2Lib::JoinType joinType,
-                  Clipper2Lib::EndType endType = Clipper2Lib::EndType::Polygon)
+                  const Clipper2Lib::JoinType joinType,
+                  const Clipper2Lib::EndType endType = Clipper2Lib::EndType::Polygon)
     {
 
         for(auto path : paths)
@@ -335,9 +337,9 @@ public:
 
     void clear() { this->Clear(); }
 
-    std::vector<EigenVec2d> execute(double delta) {
+    std::vector<EigenVec2d> execute(const double delta) {
 
-        Paths64 closedPaths;
+        Clipper2Lib::Paths64 closedPaths;
 
         this->Execute(delta * scaleFactor, closedPaths);
 
@@ -359,13 +361,13 @@ public:
         return closedOut;
     }
 
-    PolyTreeD * execute2(double delta) {
+    Clipper2Lib::PolyTreeD * execute2(const double delta) {
 
         Clipper2Lib::PolyTree64 polytree;
 
         this->Execute(delta * scaleFactor, polytree);
 
-        PolyTreeD *polytreeCpy = new PolyTreeD();
+        Clipper2Lib::PolyTreeD *polytreeCpy = new Clipper2Lib::PolyTreeD();
 
         applyScaleFactor(polytree, *polytreeCpy, scaleFactor);
 
