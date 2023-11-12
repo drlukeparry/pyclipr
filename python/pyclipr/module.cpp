@@ -175,11 +175,11 @@ public:
     void cleanUp() { this->CleanUp(); }
     void clear() { this->Clear(); }
 
-    py::object execute(Clipper2Lib::ClipType clipType,  Clipper2Lib::FillRule fillRule,
+    py::object execute(const Clipper2Lib::ClipType clipType, const Clipper2Lib::FillRule fillRule,
                        bool returnOpenPaths = false, bool returnZ = false) {
 
-        Paths64 closedPaths;
-        Paths64 openPaths;
+        Clipper2Lib::Paths64 closedPaths;
+        Clipper2Lib::Paths64 openPaths;
 
         this->Execute(clipType, fillRule, closedPaths, openPaths);
 
@@ -234,7 +234,11 @@ public:
                 openOutZ.push_back(eigPathZ);
             }
 
-            return py::make_tuple(closedOut, openOut, closedOutZ, openOutZ);
+            if(returnZ) {
+                return py::make_tuple(closedOut, openOut, closedOutZ, openOutZ);
+            } else {
+                return py::make_tuple(closedOut, openOut);
+            }
         }
     }
 
@@ -274,10 +278,16 @@ public:
 
             }
 
-            return py::make_tuple(polytreeCpy, openPathOut, openPathOutZ);
+            if(returnZ) {
+                return py::make_tuple(polytreeCpy, openPathOut, openPathOutZ);
+            } else {
+                return py::make_tuple(polytreeCpy, openPathOut);
+            }
+
         } else {
             return  py::cast(polytreeCpy);
         }
+
     }
 
 public:
