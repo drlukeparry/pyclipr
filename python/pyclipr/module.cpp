@@ -665,7 +665,7 @@ PYBIND11_MODULE(pyclipr, m) {
         .def("execute", &pyclipr::ClipperOffset::execute,
                           py::arg("delta"),
                           py::return_value_policy::take_ownership, R"(
-            The execute method performs the offseting/inflation operation on the polygons or paths that have been added
+            The `execute` method performs the offseting/inflation operation on the polygons or paths that have been added
             to the clipper object. This method will return a list of paths from the result.
 
             :param delta: The offset to apply to the inflation/offseting of paths and segments
@@ -674,8 +674,13 @@ PYBIND11_MODULE(pyclipr, m) {
         .def("execute2", &pyclipr::ClipperOffset::execute2,
                           py::arg("delta"),
                           py::return_value_policy::take_ownership, R"(
-            The execute method performs the offseting/inflation operation on the polygons or paths that have been added
-            to the clipper object. This method will return a list of paths from the result.
+            The `execute` method performs the offseting/inflation operation on the polygons or paths that have been added
+            to the clipper object. This method will return a PolyTree from the result, that considers the hierarchy of the interior and exterior
+            paths of the polygon.
+
+            :param delta: The offset to apply to the inflation/ofsetting
+            :return: A resultant offset paths created in a PolyTree64 Object )"
+        )
         .def("executeTree", &pyclipr::ClipperOffset::execute2,
                           py::arg("delta"),
                           py::return_value_policy::take_ownership, R"(
@@ -685,8 +690,10 @@ PYBIND11_MODULE(pyclipr, m) {
 
             :param delta: The offset to apply to the inflation/ofsetting
             :return: A resultant offset paths created in a PolyTree64 Object )"
-        )
+         )
         .def("clear", &pyclipr::ClipperOffset::clear, R"(The clear method removes all the paths from the ClipperOffset object.)");
+
+
 
 #ifdef PROJECT_VERSION
     m.attr("__version__") = "PROJECT_VERSION";
