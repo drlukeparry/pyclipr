@@ -676,6 +676,12 @@ PYBIND11_MODULE(pyclipr, m) {
                           py::return_value_policy::take_ownership, R"(
             The execute method performs the offseting/inflation operation on the polygons or paths that have been added
             to the clipper object. This method will return a list of paths from the result.
+        .def("executeTree", &pyclipr::ClipperOffset::execute2,
+                          py::arg("delta"),
+                          py::return_value_policy::take_ownership, R"(
+            The `executeTree` method performs the offseting/inflation operation on the polygons or paths that have been added
+            to the clipper object. This method will return a PolyTree from the result, that considers the hierarchy of the interior and exterior
+            paths of the polygon.
 
             :param delta: The offset to apply to the inflation/ofsetting
             :return: A resultant offset paths created in a PolyTree64 Object )"
