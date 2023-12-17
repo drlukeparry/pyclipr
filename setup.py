@@ -76,7 +76,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='pyclipr',
-    version='0.1.5',
+    version='0.1.6',
     author='Luke Parry',
     author_email='dev@lukeparry.uk',
     url='https://github.com/drlukeparry/pyclipr',
@@ -93,8 +93,6 @@ setup(
     zip_safe=False,
         classifiers=[
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',

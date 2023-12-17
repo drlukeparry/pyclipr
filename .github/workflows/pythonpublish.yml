@@ -17,7 +17,9 @@ jobs:
         os: [ubuntu-latest, macos-latest, macos-13, windows-latest]
         exclude:
         - os: ubuntu-latest
-            python-version: '3.12'
+          python-version: '3.12'
+        - os: macos-13
+          python-version: '3.7'
 
     steps:
     - uses: actions/checkout@v2
@@ -39,7 +41,7 @@ jobs:
         sudo apt-get update -qq -y
         sudo apt-get install -qq -y libglu1-mesa build-essential libeigen3-dev
     - name: Install Brew On Mac OS
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-latest' || matrix.os == 'macos-13'
       run: |
         brew install eigen
     - name: Install dependencies

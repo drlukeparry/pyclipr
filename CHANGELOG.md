@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 
-## [0.1.5] - 2023-16-12
+## [0.1.6] - 2023-16-12
 
 ### Added
 
@@ -21,7 +21,6 @@ All notable changes to this project will be documented in this file.
 - Scale factor has been applied when importing paths
 
 ### Changed
-
 
 
 ## [0.1.4] - 2023-11-12
