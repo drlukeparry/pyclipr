@@ -76,7 +76,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='pyclipr',
-    version='0.1.4',
+    version='0.1.5',
     author='Luke Parry',
     author_email='dev@lukeparry.uk',
     url='https://github.com/drlukeparry/pyclipr',

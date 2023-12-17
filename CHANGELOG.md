@@ -10,6 +10,20 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+
+## [0.1.5] - 2023-16-12
+
+### Added
+
+### Fixed
+
+- In `ClipperOffset::addPaths`, paths of each polygon are seperately constructed into a list of paths to ensure that these are correctly imported into ClipperOffset.
+- Scale factor has been applied when importing paths
+
+### Changed
+
+
+
 ## [0.1.4] - 2023-11-12
 
 Update release for PyClipr and updated dependencies to ClipperLib2 v.1.2. and Eigen 3.4.0 - dependent on

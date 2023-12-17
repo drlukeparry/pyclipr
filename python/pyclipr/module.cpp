@@ -27,7 +27,6 @@ typedef Eigen::Matrix<double,Eigen::Dynamic,2>   EigenVec2d;
 typedef Eigen::Matrix<double,Eigen::Dynamic,3>   EigenVec3d;
 
 
-
 static void myZCB(const Clipper2Lib::Point64& e1bot, const Clipper2Lib::Point64& e1top,
                   const Clipper2Lib::Point64& e2bot, const Clipper2Lib::Point64& e2top,
                   Clipper2Lib::Point64& pt) {
@@ -112,7 +111,7 @@ void applyScaleFactor(const Clipper2Lib::PolyPath64 & polyPath,
     {
         Clipper2Lib::Path64 path = polyPath[i]->Polygon();
         Clipper2Lib::PolyPathD pathD;
-        newPath.SetScale(1.0/scaleFactor);
+        newPath.SetScale(1.0 / double(scaleFactor));
 
         auto newChild = newPath.AddChild(path);
 
@@ -194,8 +193,8 @@ public:
             EigenVec1d eigPathZ(path.size(), 1);
 
             for (uint64_t i=0; i < path.size(); i++) {
-                eigPath(i,0) = double(path[i].x) / scaleFactor;
-                eigPath(i,1) = double(path[i].y) / scaleFactor;
+                eigPath(i,0) = double(path[i].x) / double(scaleFactor);
+                eigPath(i,1) = double(path[i].y) / double(scaleFactor);
 
                 if(returnZ)
                     eigPathZ(i, 0) = path[i].z;
@@ -221,8 +220,8 @@ public:
                 EigenVec2d eigPath(path.size(), 2);
 
                 for (uint64_t i=0; i<path.size(); i++) {
-                    eigPath(i,0) = double(path[i].x) / scaleFactor;
-                    eigPath(i,1) = double(path[i].y) / scaleFactor;
+                    eigPath(i,0) = double(path[i].x) / double(scaleFactor);
+                    eigPath(i,1) = double(path[i].y) / double(scaleFactor);
 
                     if(returnZ) {
                         //std::cout << "OP: assign z" << path[i].z;
@@ -266,8 +265,8 @@ public:
                 EigenVec1d eigPathZ(path.size(), 1);
 
                 for (uint64_t i=0; i<path.size(); i++) {
-                    eigPath(i,0) = double(path[i].x) / scaleFactor;
-                    eigPath(i,1) = double(path[i].y) / scaleFactor;
+                    eigPath(i,0) = double(path[i].x) / double(scaleFactor);
+                    eigPath(i,1) = double(path[i].y) / double(scaleFactor);
 
                     if(returnZ)
                         eigPathZ(i) = path[i].z;
@@ -322,7 +321,6 @@ public:
 
         auto r = path.unchecked<2>();
 
-
         if(path.shape(1) == 2) {
             for(uint64_t i=0; i < path.shape(0); i++)
                 p.push_back(Clipper2Lib::Point64(r(i,0) * scaleFactor, r(i,1) * scaleFactor));
@@ -340,9 +338,35 @@ public:
                   const Clipper2Lib::EndType endType = Clipper2Lib::EndType::Polygon)
     {
 
-        for(auto path : paths)
-            addPath(path, joinType, endType);
+        std::vector<Clipper2Lib::Path64> closedPaths;
 
+        for(auto path : paths) {
+
+            Clipper2Lib::Path64 p;
+
+            if (path.ndim() != 2)
+                throw std::runtime_error("Number of dimensions must be two");
+
+            if (!(path.shape(1) == 2 || path.shape(1) == 3))
+                throw std::runtime_error("Path must be nx2, or nx3");
+
+            // Resize the path list
+            p.reserve(path.shape(0));
+
+            auto r = path.unchecked<2>();
+
+            if(path.shape(1) == 2) {
+                for(uint64_t i=0; i < path.shape(0); i++)
+                    p.push_back(Clipper2Lib::Point64(r(i,0) * scaleFactor, r(i,1) * scaleFactor));
+            } else {
+                for(uint64_t i=0; i < path.shape(0); i++)
+                    p.push_back(Clipper2Lib::Point64(r(i,0) * scaleFactor, r(i,1) * scaleFactor, r(i,2)));
+            }
+
+            closedPaths.push_back(p);
+
+        }
+        this->AddPaths(closedPaths, joinType, endType);
     }
 
     void clear() { this->Clear(); }
@@ -360,8 +384,8 @@ public:
             EigenVec2d eigPath(path.size(), 2);
 
             for (uint64_t i=0; i<path.size(); i++) {
-                eigPath(i,0) = double(path[i].x) / scaleFactor;
-                eigPath(i,1) = double(path[i].y) / scaleFactor;
+                eigPath(i,0) = double(path[i].x) / double(scaleFactor);
+                eigPath(i,1) = double(path[i].y) / double(scaleFactor);
             }
 
             closedOut.push_back(eigPath);

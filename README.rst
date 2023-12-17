@@ -81,7 +81,9 @@ by using either `execute` or `execute2` methods, respectively.
     po.scaleFactor = int(1000)
 
     # add the path - ensuring to use Polygon for the endType argument
-    po.addPath(np.array(path), pyclipr.JoinType.Miter, pyclipr.EndType.Polygon)
+    # addPaths is required when working with polygon - this is a list of correctly orientated paths for exterior
+    # and interior holes
+    po.addPaths([np.array(path)], pyclipr.JoinType.Miter, pyclipr.EndType.Polygon)
 
     # Apply the offsetting operation using a delta.
     offsetSquare = po.execute(10.0)

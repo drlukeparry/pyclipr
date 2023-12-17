@@ -4,8 +4,11 @@ import numpy as np
 import pyclipr
 
 # Tuple definition of a path
-path = [(0.0, 0.), (0, 105.1234), (100, 105.1234), (100, 0), (0, 0)]
-path2 = [(1.0, 1.0), (1.0, 50), (100, 50), (100, 1.0), (1.0, 1.0)]
+path = np.array([(0.0, 0.), (0, 105.1234), (100, 105.1234), (100, 0), (0, 0)])
+path2 = np.array([(10.0, 10.0), (1.0, 50), (50.0, 50), (50., 10.0), (10.0, 10.0)])
+path2 = np.flipud(path2)
+
+path3 = np.array([(-10.0, -10.0), (70.0, -10), (70.0, 70), (-10., 70.0), (-10.0, -10.0)])
 
 """
 Create an offsetting PyClipr tool
@@ -14,16 +17,20 @@ po = pyclipr.ClipperOffset()
 
 # Set the scale factor to convert to internal integer representation
 # Note the default is set to 1000 units
-po.scaleFactor = int(1000)
+po.scaleFactor = int(1e4)
 
 # add the path - ensuring to use Polygon for the endType argument
-po.addPath(np.array(path), pyclipr.JoinType.Miter, pyclipr.EndType.Polygon)
-
+po.addPaths([path, path2], pyclipr.JoinType.Miter, pyclipr.EndType.Polygon)
 """
 Apply the offsetting operation using a delta/offset
 NoteL this automatically scaled interally scaled within pyclipr.ClipperOffset
 """
-offsetSquare = po.execute(10.0)
+offsetOut = po.execute(-1.0)
+
+import pyslm.visualise
+handle = pyslm.visualise.plotPolygon([path, path2])
+pyslm.visualise.plotPolygon(offsetOut, handle=handle, lineColor='r')
+
 
 """
 Create a Pyclipr clipping tool
@@ -35,10 +42,10 @@ pc.scaleFactor = int(1000)
 Add the paths to the clipping object. Ensure the subject and clip arguments are set to differentiate
 the paths during the Boolean operation. The final argument specifies if the path is open.
 """
-pc.addPaths(offsetSquare, pyclipr.Subject)
+pc.addPaths(offsetOut, pyclipr.Subject)
 
 # Note it is possible to add a path as a numpy array (nx2) or as a list of tuples
-pc.addPath(np.array(path2), pyclipr.Clip)
+pc.addPath(np.array(path3), pyclipr.Clip)
 
 """
 Perform Polygon Clipping 
@@ -76,7 +83,7 @@ assumed to be closed in pyclipr
 pc2.addPath(((40, -10), (50, 130)), pyclipr.Subject, True)
 
 # The clipping object is usually set to the Polygon
-pc2.addPaths(offsetSquare, pyclipr.Clip, False)
+pc2.addPaths(offsetOut, pyclipr.Clip, False)
 
 """ 
 Test the return types for open path clipping with option enabled. When The returnOpenPaths argument is set to True
@@ -100,7 +107,7 @@ plt.axis('equal')
 plt.fill(pathPoly[:, 0], pathPoly[:, 1], 'b', alpha=0.1, linewidth=1.0, linestyle='dashed', edgecolor='#000')
 
 # Plot the offset square
-plt.fill(offsetSquare[0][:, 0], offsetSquare[0][:, 1],
+plt.fill(offsetOut[0][:, 0], offsetOut[0][:, 1],
          linewidth=1.0, linestyle='dashed', edgecolor='#333', facecolor='none')
 
 # Plot the intersection
