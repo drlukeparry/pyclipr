@@ -8,10 +8,23 @@ from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
+from setuptools.command.develop import develop
+from setuptools.command.install import install
+from setuptools.command.sdist import sdist
+from setuptools.command.build_py import build_py
+from setuptools import setup, find_packages
+from subprocess import check_call, check_output
 
 with open('README.rst') as f:
     readme = f.read()
 
+""" Specific versions of submodules to use. """
+
+submoduleVersions = {
+    'clipper2': 'Clipper2_1.3.0',
+    'pybind11': 'v2.11',
+    'eigen': '3.4'
+}
 
 class CMakeExtension(Extension):
     def __init__(self, name, modName, sourcedir=''):
@@ -22,8 +35,67 @@ class CMakeExtension(Extension):
         self.sourcedir = os.path.abspath(sourcedir)
 
 
+def gitcmd_update_submodules():
+    """
+    Check if the package is being deployed as a git repository. If so, recursively update all dependencies.
+    """
+
+    if os.path.exists('.git'):
+
+        check_call(['git', 'submodule', 'update', '--init', '--recursive'])
+
+        # set all versions as required
+        curPath = os.path.abspath('.')
+
+        for k, v in submoduleVersions.items():
+            modPath =  os.path.abspath('{:s}/external/{:s}'.format(curPath, k))
+
+            import subprocess
+
+            process = subprocess.Popen(['git', 'checkout', v], cwd=modPath)
+
+
+        check_call(['git', 'submodule', 'status'])
+
+        return True
+
+    return False
+
+
+class gitcmd_develop(develop):
+    """
+    Specialized packaging class that runs `git submodule update --init --recursive`
+    as part of the update/install procedure.
+    """
+    def run(self):
+        gitcmd_update_submodules()
+        develop.run(self)
+
+
+class gitcmd_install(install):
+    """
+    Specialized packaging class that runs `git submodule update --init --recursive`
+    as part of the update/install procedure.
+    """
+    def run(self):
+        gitcmd_update_submodules()
+        install.run(self)
+
+class gitcmd_sdist(sdist):
+    """
+    Specialized packaging class that runs git submodule update --init --recursive
+    as part of the update/install procedure;.
+    """
+    def run(self):
+        gitcmd_update_submodules()
+        sdist.run(self)
+
 class CMakeBuild(build_ext):
     def run(self):
+
+        # Update the submodules to the correct version
+        gitcmd_update_submodules()
+
         try:
             out = subprocess.check_output(['cmake', '--version'])
         except OSError:
@@ -39,6 +111,11 @@ class CMakeBuild(build_ext):
             self.build_extension(ext)
 
     def build_extension(self, ext):
+        """
+        Builds the following CMake extension within the project tree
+
+        :param ext: CMake Extension to build
+        """
         print('ext_full_path', self.get_ext_fullpath(ext.name))
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         # required for auto-detection of auxiliary "native" libs
@@ -71,12 +148,10 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.', '--target', ext.modName] + build_args, cwd=self.build_temp)
 
-       # subprocess.check_call(['cmake', '--build', '.', '--target', 'install'], cwd=self.build_temp)
-
 
 setup(
     name='pyclipr',
-    version='0.1.6',
+    version='0.1.7',
     author='Luke Parry',
     author_email='dev@lukeparry.uk',
     url='https://github.com/drlukeparry/pyclipr',
@@ -84,7 +159,11 @@ setup(
     long_description_content_type = 'text/x-rst',
     description='Python library for polygon clipping and offsetting based on Clipper2.',
     ext_modules=[CMakeExtension('pyclipr.pyclipr', 'pyclipr')],
-    cmdclass=dict(build_ext=CMakeBuild),
+    cmdclass= {
+        'build_ext': CMakeBuild,
+        'develop': gitcmd_develop,
+        'sdist': gitcmd_sdist,
+    },
     packages = ['pyclipr'],
     package_dir={'': 'python'},
     keywords=['polygon clipping', 'polygon offsetting', 'libClipper', 'Clipper2', 'polygon boolean', 'polygon', 'line clipping', 'clipper'],

@@ -2,7 +2,7 @@ include LICENSE
 include README.rst
 include CHANGELOG.md
 include CMakeLists.txt
-graft external/*
-graft CMake/*
 
-include python/pyclipr
+recursive-include external *
+include python/pyclipr/*
+

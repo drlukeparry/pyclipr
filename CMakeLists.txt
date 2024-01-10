@@ -106,7 +106,7 @@ link_directories(
 )
 
 if(BUILD_PYTHON)
-    message(STATUS "Building PyCork Python Module")
+    message(STATUS "Building PyClipr Python Module")
 
     add_subdirectory(external/pybind11)
 
@@ -202,32 +202,27 @@ else(BUILD_PYTHON)
 endif(BUILD_PYTHON)
 
 set(App_SRCS
-    cork/main.cpp
+    main.cpp
 )
 
 SOURCE_GROUP("App" FILES ${App_SRCS})
 
 if(BUILD_PYTHON)
 
-    set(PYCORK_SRCS
+    set(PYCLIPR_SRCS
         python/pyclipr/module.cpp
     )
 
-    SOURCE_GROUP("Python" FILES ${PYCORK_SRCS})
+    SOURCE_GROUP("Python" FILES ${PYCLIPR_SRCS})
 
-    pybind11_add_module(pyclipr ${PYCORK_SRCS})
+    pybind11_add_module(pyclipr ${PYCLIPR_SRCS})
 
     #add_library(example MODULE main.cpp)
 
-    target_link_libraries(pyclipr PRIVATE pybind11::module clipr_static ${PYCORK_LIBS})
+    target_link_libraries(pyclipr PRIVATE pybind11::module clipr_static ${PYCLIPR_LIBS})
 
     set_target_properties(pyclipr PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
                                              SUFFIX "${PYTHON_MODULE_EXTENSION}")
-
-
-     #add_executable(main ${App_SRCS})
-
-     #target_link_libraries(main clipr_static ${PYCLIPR_LIBS})
 
     install(TARGETS pyclipr DESTINATION lib/pyclipr)
 
@@ -235,7 +230,7 @@ if(BUILD_PYTHON)
 else(BUILD_PYTHON)
 
     add_executable(main ${App_SRCS})
-    target_link_libraries(main clipr ${PYCORK_LIBS})
+    target_link_libraries(main clipr ${PYCLIPR_LIBS})
 
     #install(TARGETS mpir DESTINATION )
 

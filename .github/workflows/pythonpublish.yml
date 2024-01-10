@@ -9,7 +9,6 @@ on:
 
 jobs:
   deploy:
-
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -70,3 +69,34 @@ jobs:
       run: |
         python3 -m twine upload dist/*
 
+  deploySource:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          submodules: recursive
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Display Python version
+      run: python3 -c "import sys; print(sys.version)"
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install setuptools wheel twine
+    - name: Install APT On Linux
+      run: |
+        sudo apt-get update -qq -y
+        sudo apt-get install -qq -y libglu1-mesa build-essential libeigen3-dev
+    - name: Build
+      run: |
+        python3 setup.py sdist
+
+    - name: Publish (Source)
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        twine upload dist/*
