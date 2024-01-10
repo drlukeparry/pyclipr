@@ -576,12 +576,12 @@ PYBIND11_MODULE(pyclipr, m) {
         .def_readwrite("scaleFactor", &pyclipr::Clipper::scaleFactor, R"(
             Scale factor to be for transforming the input and output vectors. The default is 1000 )"
          )
-        .def_readwrite("preserveCollinear", &pyclipr::Clipper::PreserveCollinear, R"(
+        .def_property("preserveCollinear", [](const pyclipr::Clipper &s ) { return s.PreserveCollinear();}
+                                         , [](pyclipr::Clipper &s, bool val ) { return s.PreserveCollinear(val);}, R"(
              By default, when three or more vertices are collinear in input polygons (subject or clip),
              the Clipper object removes the 'inner' vertices before clipping. When enabled the PreserveCollinear property
              prevents this default behavior to allow these inner vertices to appear in the solution.
          )" )
-        //.def("addPath", &pyclipr::Clipper::addPath)
         .def("addPath", &pyclipr::Clipper::addPath, py::arg("path"), py::arg("pathType"), py::arg("isOpen") = false, R"(
             The addPath method adds one or more closed subject paths (polygons) to the Clipper object.
 

@@ -10,8 +10,18 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+## [0.1.7] - 2024-01-11
 
-## [0.1.6] - 2023-16-12
+### Added
+- Updated build script to prepare source distribution (Linux)
+- Script automatically pulls the specified submodule versions in setup.py
+
+### Fixed
+- Fixed old references to original build-scripts
+- Fixed the external submodules (clipper2, pybind, eigen) to fixed version for reference
+- Fixed a build issue with latest ClipperLib (PreserveCollinear property has become a protected member)
+
+## [0.1.6] - 2023-12-16
 
 ### Added
 
