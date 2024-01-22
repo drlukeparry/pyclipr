@@ -1,4 +1,4 @@
-from typing import Any, Literal, Never, overload
+from typing import Any, Iterable, Literal, Never, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -24,26 +24,17 @@ Intersection: ClipType = ...
 Xor: ClipType = ...
 
 
-class FillType:
-    EvenOdd: FillType = ...
-    NonZero: FillType = ...
-    Positive: FillType = ...
-    Negative: FillType = ...
-
-EvenOdd: FillType = ...
-NonZero: FillType = ...
-Positive: FillType = ...
-Negative: FillType = ...
+class FillRule:
+    EvenOdd: FillRule = ...
+    NonZero: FillRule = ...
+    Positive: FillRule = ...
+    Negative: FillRule = ...
 
 
 class JoinType:
     Square: JoinType = ...
     Round: JoinType = ...
     Miter: JoinType = ...
-
-Square: JoinType = ...  # FIXME
-Round: JoinType = ...  # FIXME
-Miter: JoinType = ...
 
 
 class EndType:
@@ -52,12 +43,6 @@ class EndType:
     Joined: EndType = ...
     Polygon: EndType = ...
     Round: EndType = ...
-
-Square: EndType = ...  # FIXME
-Butt: EndType = ...
-Joined: EndType = ...
-Polygon: EndType = ...
-Round: EndType = ...  # FIXME
 
 
 clipperVersion: str = ...
@@ -122,7 +107,7 @@ class PolyTreeD:
 
 
 def polyTreeToPaths64(arg0: PolyTree) -> Any: ...  # TODO
-def orientation(path: Any, scaleFactor: float) -> bool: ...  # TODO
+def orientation(path: npt.NDArray[np.float64], scaleFactor: float = ...) -> bool: ...
 def polyTreeToPaths(arg0: PolyTree) -> Any: ...  # TODO
 def simplifyPath(path: Any, epsilon: float, isOpenPath: bool = ...) -> Any: ...  # TODO
 def simplifyPaths(paths: Any, epsilon: float, isOpenPath: bool = ...) -> Any: ...  # TODO
@@ -141,7 +126,7 @@ class Clipper:
 
     def addPaths(
         self,
-        paths: list[npt.NDArray[np.float64]],
+        paths: Iterable[npt.NDArray[np.float64]],
         pathType: PathType,
         isOpen: bool = ...
     ) -> None: ...
@@ -150,7 +135,7 @@ class Clipper:
     def execute(
         self,
         clipType: ClipType,
-        fillType: FillType = ...,
+        fillRule: FillRule = ...,
         *,
         returnOpenPaths: Literal[False] = ...,
         returnZ: Literal[False] = ...
@@ -160,12 +145,11 @@ class Clipper:
     def execute(
         self,
         clipType: ClipType,
-        fillType: FillType = ...,
+        fillRule: FillRule = ...,
         *,
         returnOpenPaths: Literal[False] = ...,
-        returnZ: Literal[True] = ...
+        returnZ: Literal[True]
     ) -> tuple[
-        list[npt.NDArray[np.float64]],
         list[npt.NDArray[np.float64]],
         list[npt.NDArray[np.float64]]
     ]: ...
@@ -174,10 +158,23 @@ class Clipper:
     def execute(
         self,
         clipType: ClipType,
-        fillType: FillType = ...,
+        fillRule: FillRule = ...,
         *,
-        returnOpenPaths: Literal[True] = ...,
-        returnZ: bool = ...
+        returnOpenPaths: Literal[True],
+        returnZ: Literal[False] = ...
+    ) -> tuple[
+        list[npt.NDArray[np.float64]],
+        list[npt.NDArray[np.float64]]
+    ]: ...
+
+    @overload
+    def execute(
+        self,
+        clipType: ClipType,
+        fillRule: FillRule = ...,
+        *,
+        returnOpenPaths: Literal[True],
+        returnZ: Literal[True]
     ) -> tuple[
         list[npt.NDArray[np.float64]],
         list[npt.NDArray[np.float64]],
@@ -189,7 +186,7 @@ class Clipper:
     def execute2(
         self,
         clipType: ClipType,
-        fillType: FillType = ...,
+        fillRule: FillRule = ...,
         *,
         returnOpenPaths: Literal[False] = ...,
         returnZ: bool = ...
@@ -199,10 +196,23 @@ class Clipper:
     def execute2(
         self,
         clipType: ClipType,
-        fillType: FillType = ...,
+        fillRule: FillRule = ...,
         *,
-        returnOpenPaths: Literal[True] = ...,
-        returnZ: bool = ...
+        returnOpenPaths: Literal[True],
+        returnZ: Literal[False] = ...
+    ) -> tuple[
+        PolyTreeD,
+        list[npt.NDArray[np.float64]]
+    ]: ...
+
+    @overload
+    def execute2(
+        self,
+        clipType: ClipType,
+        fillRule: FillRule = ...,
+        *,
+        returnOpenPaths: Literal[True],
+        returnZ: Literal[True]
     ) -> tuple[
         PolyTreeD,
         list[npt.NDArray[np.float64]],
@@ -229,7 +239,7 @@ class ClipperOffset:
 
     def addPaths(
         self,
-        paths: list[npt.NDArray[np.float64]],
+        paths: Iterable[npt.NDArray[np.float64]],
         joinType: JoinType,
         endType: EndType = ...
     ) -> None: ...
