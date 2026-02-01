@@ -116,7 +116,7 @@ std::vector<Clipper2Lib::Path64> createPaths(const std::vector<py::array_t<doubl
     return clipperPaths;
 }
 
-py::object simplifyPath(const py::array_t<double> &path, double epsilon, double scaleFactor, bool isOpenPath = false)
+py::object simplifyPath(const py::array_t<double> &path, double epsilon, double scaleFactor = 1e3, bool isOpenPath = false)
 {
     if (scaleFactor < std::numeric_limits<double>::epsilon()) {
         throw std::runtime_error("Scale factor cannot be zero");
@@ -125,11 +125,12 @@ py::object simplifyPath(const py::array_t<double> &path, double epsilon, double 
     Clipper2Lib::Path64 clipperPath = createPath(path, scaleFactor);
     Clipper2Lib::Path64 simplifiedPath = Clipper2Lib::SimplifyPath(clipperPath, epsilon, isOpenPath);
 
-    EigenVec2d simpPathOut = path2EigenVec2d(simplifiedPath, scaleFactor);
+    // Convert this back into an eigen Vector2D
+    EigenVec2d simpPathOut = path2EigenVec2d(simplifiedPath, 1.0 / scaleFactor);
     return py::cast(simpPathOut);
 }
 
-py::object simplifyPaths(std::vector<py::array_t<double>> &paths, double epsilon, double scaleFactor, bool isOpenPath = false)
+py::object simplifyPaths(std::vector<py::array_t<double>> &paths, double epsilon, double scaleFactor = 1e3, bool isOpenPath = false)
 {
     if (scaleFactor < std::numeric_limits<double>::epsilon()) {
         throw std::runtime_error("Scale factor cannot be zero");
@@ -140,14 +141,16 @@ py::object simplifyPaths(std::vector<py::array_t<double>> &paths, double epsilon
 
     std::vector<EigenVec2d> simpPathsOut;
     for (auto simpPath : simpPaths) {
-        EigenVec2d simpPathOut = path2EigenVec2d(simpPath, scaleFactor);
+
+        // Convert this back into an eigen Vector2D
+        EigenVec2d simpPathOut = path2EigenVec2d(simpPath, 1.0 / scaleFactor);
         simpPathsOut.push_back(simpPathOut);
     }
 
     return py::cast(simpPathsOut);
 }
 
-bool orientation(const py::array_t<double> &path, const double scaleFactor)
+bool orientation(const py::array_t<double> &path, const double scaleFactor = 1e3)
 {
     if (scaleFactor < std::numeric_limits<double>::epsilon()) {
         throw std::runtime_error("Scale factor cannot be zero");
@@ -534,7 +537,7 @@ protected:
 
 } // end of namespace pyclipr
 
-PYBIND11_MODULE(pyclipr, m) {
+PYBIND11_MODULE(pyclipr, m, py::mod_gil_not_used()) {
 
     m.doc() = R"pbdoc(
         PyClipr Module
@@ -637,7 +640,7 @@ PYBIND11_MODULE(pyclipr, m) {
         :return: `True` if the polygon's orientation is counter-clockwise, `False` otherwise.
         )" )
     .def("polyTreeToPaths", &pyclipr::polyTreeToPaths64, py::return_value_policy::automatic)
-    .def("simplifyPath", &pyclipr::simplifyPath, py::arg("path"), py::arg("epsilon"), py::arg("scaleFactor"), py::arg("isOpenPath") = false,
+    .def("simplifyPath", &pyclipr::simplifyPath, py::arg("path"), py::arg("epsilon"), py::arg("scaleFactor")  = 1000, py::arg("isOpenPath") = false,
                         py::return_value_policy::automatic, R"(
             This function removes vertices that are less than the specified epsilon distance from an imaginary line
             that passes through its two adjacent vertices. Logically, smaller epsilon values will be less aggressive
@@ -651,7 +654,7 @@ PYBIND11_MODULE(pyclipr, m) {
             )"
      )
     .def("simplifyPaths", &pyclipr::simplifyPaths, py::arg("paths"), py::arg("epsilon"),
-                                                   py::arg("scaleFactor"), py::arg("isOpenPath") = false,
+                                                   py::arg("scaleFactor")  = 1000, py::arg("isOpenPath") = false,
                                                    py::return_value_policy::automatic, R"(
             This function removes vertices that are less than the specified epsilon distance from an imaginary line
             that passes through its two adjacent vertices. Logically, smaller epsilon values will be less aggressive
