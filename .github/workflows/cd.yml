@@ -25,7 +25,7 @@ jobs:
         with:
           submodules: recursive
       - name: Get tags
-        run: git fetch --tags --forvce
+        run: git fetch --tags --force
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
