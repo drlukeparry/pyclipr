@@ -21,7 +21,7 @@ jobs:
     name: Build all wheels
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-tags: true
@@ -60,7 +60,7 @@ jobs:
         python-version: [3.9, '3.10', '3.11', '3.12', '3.13', '3.14']
         os: [ubuntu-latest, macos-14, macos-15, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-tags: true
@@ -102,7 +102,7 @@ jobs:
     needs: [build-wheels]
     if: success() && startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
