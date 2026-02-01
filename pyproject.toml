@@ -29,6 +29,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
 ]
 
@@ -61,7 +63,10 @@ requires = [
 
 [tool.scikit-build]
 cmake.version = ">=3.15"
+cmake.build-type = "Release"
 messages.after-failure = """{bold.red}Sorry{normal}, build failed. Your platform is {platform.platform}."""
+
+
 [tool.hatch.build.targets.wheel.hooks.scikit-build]
 experimental = true
 
@@ -71,17 +76,20 @@ artifacts = [
   "*.so",
   "*.pyi",
   "*.dll"
+
 ]
 
 [[tool.hatch.build.targets.sdist.hooks.build-scripts.scripts]]
 commands = [
     "git fetch",
     "git submodule update --init --recursive",
-    "cd external/clipper2 && git fetch --tags && git checkout Clipper2_1.5.4",
-    "cd external/eigen && git fetch --tags && git checkout 3.4.0",
-    "cd external/pybind11 && git fetch --tags && git checkout v2.13.6"
+    "cd external/clipper2 && git fetch --tags && git checkout Clipper2_2.0.1",
+    "cd external/eigen && git fetch --tags && git checkout 5.0.1",
+    "cd external/pybind11 && git fetch --tags && git checkout v3.0.1"
 ]
-artifacts = []
+artifacts = [
+  "external/**/*"
+]
 
 [tool.mypy]
 files = "setup.py"
@@ -94,4 +102,5 @@ warn_unreachable = true
 [[tool.mypy.overrides]]
 module = ["ninja"]
 ignore_missing_imports = true
+
 
