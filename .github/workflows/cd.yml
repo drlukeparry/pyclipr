@@ -128,7 +128,7 @@ jobs:
       with:
         tag_name: ${{ env.PYCLIPR_PY_VERSION }}
         name: ${{ env.PYCLIPR_PY_VERSION }}
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.RELEASE_TOKEN }}
         files: |
             dist/*.tar.gz
             dist/*.whl
