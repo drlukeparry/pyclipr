@@ -1,17 +1,19 @@
 Pyclipr - Python Polygon and Offsetting Library (Clipper2 Bindings)
 ========================================================================
 
-.. image:: https://github.com/drlukeparry/pyclipr/actions/workflows/pythonpublish.yml/badge.svg
-    :target: https://github.com/drlukeparry/pyclipr/actions
-.. image:: https://badge.fury.io/py/pyclipr.svg
-    :target: https://badge.fury.io/py/pyclipr
-.. image:: https://static.pepy.tech/personalized-badge/pyclipr?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
- :target: https://pepy.tech/project/pyclipr
-.. image:: https://img.shields.io/github/license/drlukeparry/pyclipr
+|ci-badge| |pypi-badge| |license-badge| |pepy-badge|  |python-badge| |py-version-badge|
+
+.. |ci-badge| image:: https://img.shields.io/github/actions/workflow/status/drlukeparry/pyclipr/cd.yml
+    :alt: GitHub Actions Workflow Status
+.. |pypi-badge| image:: https://badge.fury.io/py/pyclipr.svg
+    :target: https://pypi.python.org/pypi/pyclipr/
+.. |license-badge| image:: https://img.shields.io/github/license/drlukeparry/pyclipr
      :alt: GitHub License
-..  image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
+.. |pepy-badge| image:: https://static.pepy.tech/personalized-badge/pyclipr?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
+    :target: https://pepy.tech/project/pyclipr
+.. |python-badge| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
    :target: https://www.python.org/
-..  image:: https://img.shields.io/pypi/pyversions/pyclipr.svg
+.. |py-version-badge| image:: https://img.shields.io/pypi/pyversions/pyclipr.svg
     :target: https://pypi.python.org/pypi/pyclipr/
 
 
