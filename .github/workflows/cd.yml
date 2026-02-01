@@ -93,6 +93,7 @@ jobs:
         run: |
           twine check dist/*
       - name: Upload distributions
+        if: matrix.os != 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           path: dist
