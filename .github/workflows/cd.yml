@@ -7,10 +7,11 @@
 name: CD
 
 on:
-  workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
-      - 'v*'
+      - "v*.*.*"
   pull_request:
     branches:
       - main
