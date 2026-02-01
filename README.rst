@@ -7,11 +7,11 @@ Pyclipr - Python Polygon and Offsetting Library (Clipper2 Bindings)
     :target: https://badge.fury.io/py/pyclipr
 .. image:: https://static.pepy.tech/personalized-badge/pyclipr?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
  :target: https://pepy.tech/project/pyclipr
-.. |license-badge| image:: https://img.shields.io/github/license/drlukeparry/pyclipr
+.. image:: https://img.shields.io/github/license/drlukeparry/pyclipr
      :alt: GitHub License
-.. |python-badge| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
+..  image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
    :target: https://www.python.org/
-.. |py-version-badge| image:: https://img.shields.io/pypi/pyversions/pyclipr.svg
+..  image:: https://img.shields.io/pypi/pyversions/pyclipr.svg
     :target: https://pypi.python.org/pypi/pyclipr/
 
 
