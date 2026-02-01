@@ -10,6 +10,23 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+
+## [0.1.8] - 2026-02-01
+
+### Added
+- Added a default parameter to `pyclipr.simplifyPath`,  `pyclipr.simplifyPath` and `pyclipr.orientation` to apply implicit scaling (1e3 by default)  [e4124f51c7e0b604ae190bc2ae3e2364bbe72960](https://github.com/drlukeparry/pyclipr/commit/e4124f51c7e0b604ae190bc2ae3e2364bbe72960)
+- Changed the build scripts to use hatchling and scikit-build  [9a90aecf8ee85cb2f7501fec277391e849201f46](https://github.com/drlukeparry/pyclipr/commit/9a90aecf8ee85cb2f7501fec277391e849201f46)
+
+### Fixed 
+- Fixed pyclipr.simplifyPath to scale the output paths back to original scale [e4124f51c7e0b604ae190bc2ae3e2364bbe72960](https://github.com/drlukeparry/pyclipr/commit/e4124f51c7e0b604ae190bc2ae3e2364bbe72960)
+
+### Changed
+- Updated to use latest ClipperLib2 version 2.0.1 [6c15c31d51ea4813e1f4752279cbd5f171a8d4d5](https://github.com/drlukeparry/pyclipr/commit/6c15c31d51ea4813e1f4752279cbd5f171a8d4d5)
+- Updated to use latest Eigen version 5.0.1  [6c15c31d51ea4813e1f4752279cbd5f171a8d4d5](https://github.com/drlukeparry/pyclipr/commit/6c15c31d51ea4813e1f4752279cbd5f171a8d4d5)
+- Updated build scripts for latest Python versions (3.11, 3.12, 3.13, 3.14)
+- Updated build scripts to use latest pybind11 version 3.0.1 [6c15c31d51ea4813e1f4752279cbd5f171a8d4d5](https://github.com/drlukeparry/pyclipr/commit/6c15c31d51ea4813e1f4752279cbd5f171a8d4d5)
+- Update README.rst
+
 ## [0.1.7] - 2024-01-11
 
 ### Added
@@ -20,6 +37,9 @@ All notable changes to this project will be documented in this file.
 - Fixed old references to original build-scripts
 - Fixed the external submodules (clipper2, pybind, eigen) to fixed version for reference
 - Fixed a build issue with latest ClipperLib (PreserveCollinear property has become a protected member)
+
+### Changed
+
 
 ## [0.1.6] - 2023-12-16
 

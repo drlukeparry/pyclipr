@@ -4,5 +4,5 @@ include CHANGELOG.md
 include CMakeLists.txt
 
 recursive-include external *
+recursive-include external/pybind11 *
 include python/pyclipr/*
-

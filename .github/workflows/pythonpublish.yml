@@ -12,13 +12,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9, '3.10', '3.11', '3.12']
-        os: [ubuntu-latest, macos-latest, macos-13, windows-latest]
+        python-version: [3.8, 3.9, '3.10', '3.11', '3.12']
+        os: [ubuntu-latest, macos-13, macos-14, windows-latest]
         exclude:
         - os: ubuntu-latest
           python-version: '3.12'
-        - os: macos-13
-          python-version: '3.7'
 
     steps:
     - uses: actions/checkout@v2
@@ -40,7 +38,7 @@ jobs:
         sudo apt-get update -qq -y
         sudo apt-get install -qq -y libglu1-mesa build-essential libeigen3-dev
     - name: Install Brew On Mac OS
-      if: matrix.os == 'macos-latest' || matrix.os == 'macos-13'
+      if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
       run: |
         brew install eigen
     - name: Install dependencies
@@ -65,7 +63,7 @@ jobs:
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-14' || matrix.os == 'macos-13'
       run: |
         python3 -m twine upload dist/*
 

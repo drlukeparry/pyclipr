@@ -1,15 +1,9 @@
-[submodule "external/filesystem"]
-	path = external/filesystem
-	url = https://github.com/wjakob/filesystem.git
 [submodule "external/pybind11"]
 	path = external/pybind11
 	url = https://github.com/pybind/pybind11
 [submodule "external/eigen"]
 	path = external/eigen
 	url = https://gitlab.com/libeigen/eigen.git
-[submodule "external/fmt"]
-	path = external/fmt
-	url = https://github.com/fmtlib/fmt.git
 [submodule "external/clipper2"]
 	path = external/clipper2
 	url = https://github.com/AngusJohnson/Clipper2.git

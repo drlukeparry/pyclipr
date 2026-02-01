@@ -1,12 +1,20 @@
 Pyclipr - Python Polygon and Offsetting Library (Clipper2 Bindings)
 ========================================================================
 
-.. image:: https://github.com/drlukeparry/pyclipr/actions/workflows/pythonpublish.yml/badge.svg
-    :target: https://github.com/drlukeparry/pyclipr/actions
-.. image:: https://badge.fury.io/py/pyclipr.svg
-    :target: https://badge.fury.io/py/pyclipr
-.. image:: https://static.pepy.tech/personalized-badge/pyclipr?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
- :target: https://pepy.tech/project/pyclipr
+|ci-badge| |pypi-badge| |license-badge| |pepy-badge|  |python-badge| |py-version-badge|
+
+.. |ci-badge| image:: https://img.shields.io/github/actions/workflow/status/drlukeparry/pyclipr/cd.yml
+    :alt: GitHub Actions Workflow Status
+.. |pypi-badge| image:: https://badge.fury.io/py/pyclipr.svg
+    :target: https://pypi.python.org/pypi/pyclipr/
+.. |license-badge| image:: https://img.shields.io/github/license/drlukeparry/pyclipr
+     :alt: GitHub License
+.. |pepy-badge| image:: https://static.pepy.tech/personalized-badge/pyclipr?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
+    :target: https://pepy.tech/project/pyclipr
+.. |python-badge| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
+   :target: https://www.python.org/
+.. |py-version-badge| image:: https://img.shields.io/pypi/pyversions/pyclipr.svg
+    :target: https://pypi.python.org/pypi/pyclipr/
 
 
 Pyclipr is a Python library offering the functionality of the `Clipper2 <http://www.angusj.com/clipper2/Docs/Overview.htm>`_
@@ -18,7 +26,7 @@ Unlike `pyclipper <https://pypi.org/project/pyclipper/>`_, this library is not b
 capability pybind is exploited. This library aims to provide convenient access to the Clipper2 library for Python users,
 especially with its usage in 3D Printing and computer graphics applications.
 
-For further information, see the latest `release notes <https://github.com/drlukeparry/pycork/blob/master/CHANGELOG.md>`_.
+For further information, see the latest `release notes <https://github.com/drlukeparry/pyclipr/blob/master/CHANGELOG.md>`_.
 
 Installation
 *************
@@ -41,29 +49,33 @@ Alternatively, pyclipr may be compiled directly from source within the python en
 are the a compliant c++ build environment include CMake build system (>v3.15) and the availability of a compiler with
 c++17 compatibility.  Currently the package has been tested built using Windows 10, using VS2019 and Mac OSX Sonoma.
 
-Firstly, clone the PyClipr repository whilst ensuring that you perform the recurisve submodule when initialising
-the repoistory. This ensures that all dependencies (pybind, pyclipr, eigen, fmt) are downloaded into the source tree.
+Firstly, clone the pyclipr repository whilst ensuring that you perform the recurisve submodule when initialising
+the repoistory. This ensures that all dependencies (•pybind, • pyclipr, •eigen) are downloaded into the source tree.
 
 .. code:: bash
 
     git clone https://github.com/drlukeparry/pyclipr.git && cd ./pyclipr
     git submodule update --init --recursive
 
-    python setup.py install
+    python -m build
 
 Usage
 ******
 
-The pyclipr library follows similar structure to that documented in `Clipper2 <http://www.angusj.com/clipper2/Docs/Overview.htm>`_ library.
-Although for consistency most methods are implemented using camelcase naming convention and more generic functions
-are provided for the addition of paths.
+The pyclipr library follows similar structure to that documented in `Clipper2 <http://www.angusj.com/clipper2/Docs/Overview.htm>`_
+library. Although for consistency most methods are implemented using camelCase naming convention and more generic
+functions are provided for the addition of paths.
 
 The library assumes that coordinates are provided and scaled by a ``scaleFactor``  (*default = 1e3*), set within
-the ``Clipper`` and ``ClipperOffset`` classes to ensure correct numerical robustness outlined in the underlying Clipper library.
-The coordinates for the paths may be provided as a list of tuples or a numpy array.
+the ``Clipper`` and ``ClipperOffset`` classes to ensure correct numerical robustness outlined in the underlying Clipper
+library. The coordinates for the paths may be provided as a list of tuples or a numpy array. The internal scale factor
+determines the precision of the clipping and offsetting operations but can impact performance. It is recommended to
+adjust this in accordance to your applications.
 
-Both ``Path64`` and ``PolyTree64`` structures are supported from the clipping and offseting operations, which are enacted
-by using either `execute` or `execute2` methods, respectively.
+Both ``Path64`` and ``PolyTree64`` structures are supported from the clipping and offsetting operations, which are
+enacted by using either `execute` or `execute2` methods, respectively.
+
+A variety of other utilities are provided for inspection of polygons and paths.
 
 .. code:: python
 
@@ -112,7 +124,6 @@ by using either `execute` or `execute2` methods, respectively.
     # An alternative equivalent name is executeTree
     outB = pc.executeTree(pyclipr.Intersection, pyclipr.FillRule.EvenOdd)
 
-
     """ Test Open Path Clipping """
     # Pyclipr can be used for clipping open paths.  This remains simple to complete using the Clipper2 library
 
@@ -152,3 +163,14 @@ by using either `execute` or `execute2` methods, respectively.
 
     # Plot the open path intersection
     plt.plot(openPathsC[0][:,0], openPathsC[0][:,1],color='#222', linewidth=1.0, linestyle='dashed', marker='.',markersize=20.0)
+
+    """ Utility Functions """
+
+    # Simplification of Paths
+    rect = [(0,0), (100,0), (100,100), (0,100), (0,0)]
+    rect2 = [(20,0), (20,10), (30,10), (30,0), (20,0)]
+
+    simplifiedPaths = pyclipr.simplifyPaths([rect, rect2], epsilon=0.001)
+
+    # Check the orientation of a path (True if Counter-Clockwise)
+    isCCW = pyclipr.orientation(rect)

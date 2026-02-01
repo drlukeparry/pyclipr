@@ -9,9 +9,7 @@ ehthumbs_vista.db
 
 .idea/
 
-### A3200 API Files
 
-External/a3200/
 
 # Dump file
 *.stackdump
@@ -671,7 +669,6 @@ StyleCopReport.xml
 # Files built by Visual Studio
 *_i.c
 *_p.c
-*_h.h
 *.ilk
 *.meta
 *.obj

@@ -1,0 +1,106 @@
+[project]
+name = "pyclipr"
+description = "Python library for polygon clipping and offsetting based on Clipper2"
+readme = "README.rst"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
+authors = [
+    { name = "Luke Parry", email = "dev@lukeparry.uk" },
+    { name = "Luktug", email = "contact@luktug.co.uk" }
+]
+dynamic = [
+    "version"
+]
+
+keywords= [
+    'polygon clipping',
+    'polygon offsetting',
+    'libClipper',
+    'Clipper2',
+    'polygon boolean',
+    'polygon',
+    'line clipping',
+    'clipper'
+]
+
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+]
+
+dependencies = [
+    "numpy>=1.21"
+]
+
+[project.urls]
+Homepage = "https://github.com/drlukeparry/pyclipr"
+Documentation = "https://github.com/drlukeparry/pyclipr"
+Repository = "https://github.com/drlukeparry/pyclipr.git"
+Issues = "https://github.com/drlukeparry/pyclipr/issues"
+Changelog = "https://github.com/drlukeparry/pyclipr/blob/main/CHANGELOG.md"
+
+[tool.hatch.version]
+path = "python/pyclipr/version.py"
+
+[build-system]
+build-backend = "hatchling.build"
+requires = [
+    "hatchling>=1.27",
+    "scikit-build",
+    "scikit-build-core>=0.10",
+    "wheel",
+    "hatch-build-scripts",
+    "pybind11_stubgen",
+    "numpy>=1.21"
+]
+
+
+[tool.scikit-build]
+cmake.version = ">=3.15"
+cmake.build-type = "Release"
+messages.after-failure = """{bold.red}Sorry{normal}, build failed. Your platform is {platform.platform}."""
+
+
+[tool.hatch.build.targets.wheel.hooks.scikit-build]
+experimental = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/pyclipr"]
+artifacts = [
+  "*.so",
+  "*.pyi",
+  "*.dll"
+
+]
+
+[[tool.hatch.build.targets.sdist.hooks.build-scripts.scripts]]
+commands = [
+    "git fetch",
+    "git submodule update --init --recursive",
+    "cd external/clipper2 && git fetch --tags && git checkout Clipper2_2.0.1",
+    "cd external/eigen && git fetch --tags && git checkout 5.0.1",
+    "cd external/pybind11 && git fetch --tags && git checkout v3.0.1"
+]
+artifacts = [
+  "external/**/*"
+]
+
+[tool.mypy]
+files = "setup.py"
+python_version = "3.9"
+strict = true
+show_error_codes = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["ninja"]
+ignore_missing_imports = true
+
+
